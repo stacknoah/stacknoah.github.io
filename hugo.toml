@@ -51,7 +51,7 @@ sectionPagesMenu = "main"
 
   # 홈 최근글 피드에 포함할 섹션. 새 섹션 추가 시 여기에 이름만 더하면 됨
   # (메뉴/홈카드는 자동, 이건 '최근글 피드'에만 영향)
-  mainSections = ["wargame", "whitehat", "oscp", "notes"]
+  mainSections = ["wargame", "training", "oscp", "notes"]
 
   ShowReadingTime = true
   ShowShareButtons = false
@@ -64,8 +64,13 @@ sectionPagesMenu = "main"
   ShowRssButtonInSectionTermList = true
 
   [params.homeInfoParams]
-    Title = "Stacknoah"
-    Content = "보안 공부 기록 — 푼 문제와 정리한 개념을 모아 둡니다."
+    Title = "송재우"
+    eyebrow = "SECURITY · CTF · OFFENSIVE SECURITY"
+    Content = """
+보안을 공부합니다.
+
+당위와 지식을 기록합니다.
+"""
 
   [[params.socialIcons]]
     name = "github"
@@ -76,9 +81,9 @@ sectionPagesMenu = "main"
 
   [params.giscus]
     repo = "stacknoah/stacknoah.github.io"
-    repoId = "R_kgDOSxtdag"
+    repoId = "PASTE_FROM_GISCUS_APP"
     category = "Announcements"
-    categoryId = "DIC_kwDOSxtdas4C-jQN"
+    categoryId = "PASTE_FROM_GISCUS_APP"
 
   [params.fuseOpts]
     isCaseSensitive = false

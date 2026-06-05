@@ -1,0 +1,38 @@
+{{- with site.Params.homeInfoParams }}
+<article class="first-entry home-info">
+    <header class="entry-header">
+        {{- with .eyebrow }}<p class="home-eyebrow">{{ . }}</p>{{ end }}
+        <h1>{{ .Title | markdownify }}</h1>
+    </header>
+    <div class="entry-content md-content home-intro">
+        {{ $opts := dict "display" "block" }}
+        {{ .Content | $.Page.RenderString $opts }}
+    </div>
+    <footer class="entry-footer home-social">
+        {{ partial "social_icons.html" (dict "align" .AlignSocialIconsTo) }}
+    </footer>
+
+    {{- /* 섹션 인덱스: content/ 밑 폴더(_index.md) 만들면 자동 추가. 순서=weight, 설명=description */ -}}
+    {{- $sections := where site.Sections "Params.hideFromHome" "!=" true }}
+    {{- if $sections }}
+    <div class="section-eyebrow">Sections</div>
+    <div class="track-cards">
+        {{- range $i, $s := $sections }}
+        <a class="track-card" href="{{ $s.Permalink }}">
+            <span class="track-index">{{ printf "%02d" (add $i 1) }}</span>
+            <strong>{{ $s.Title }}</strong>
+            {{- with $s.Description }}<em>{{ . }}</em>{{ end }}
+            <span class="track-count">{{ len $s.RegularPagesRecursive }} posts</span>
+            <span class="track-arrow">&#8599;</span>
+        </a>
+        {{- end }}
+    </div>
+    {{- end }}
+
+    {{- /* 최근 글이 있을 때만 Latest 라벨 (아래에 기본 글 피드가 이어짐) */ -}}
+    {{- $recent := where site.RegularPages "Type" "in" site.Params.mainSections }}
+    {{- if $recent }}
+    <div class="section-eyebrow">Latest</div>
+    {{- end }}
+</article>
+{{- end -}}

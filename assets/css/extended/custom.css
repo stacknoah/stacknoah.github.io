@@ -1,6 +1,7 @@
 /* =========================================================
    Stacknoah — 차분한 올리브 + 뉴트럴 베이스
    타이포그래피 중심 · 모노스페이스 디테일 · 절제된 포인트
+   (히어로 강화: leerob / paco / rauno 류 미니멀 레퍼런스)
    ========================================================= */
 
 :root {
@@ -10,23 +11,19 @@
                  Menlo, Consolas, "Liberation Mono", monospace;
 }
 
-/* ---------- LIGHT (부드러운 웜 화이트) ---------- */
 :root {
     --theme: #f8f7f3;
     --entry: #fefdfb;
-    --primary: #26241f;        /* 제목·강조 — 웜 블랙 */
-    --secondary: #8c8675;      /* 메타·보조 */
+    --primary: #26241f;
+    --secondary: #8c8675;
     --tertiary: #efece4;
-    --content: #3a372f;        /* 본문 */
-    --code-bg: #edeae2;        /* 인라인 코드 */
-    --code-block-bg: #1f1e1b;  /* 코드블록 — 중립 다크 */
+    --content: #3a372f;
+    --code-bg: #edeae2;
+    --code-block-bg: #1f1e1b;
     --border: #e7e3da;
-
-    --accent: #6f7a45;         /* 차분한 올리브 */
+    --accent: #6f7a45;
     --accent-hover: #5a6338;
 }
-
-/* ---------- DARK (뉴트럴 웜 다크) ---------- */
 :root[data-theme="dark"] {
     --theme: #1a1a17;
     --entry: #222220;
@@ -37,36 +34,20 @@
     --code-bg: #2a2925;
     --code-block-bg: #161613;
     --border: #2c2b27;
-
     --accent: #9aa066;
     --accent-hover: #b0b67c;
 }
 
 /* ---------- 타이포그래피 ---------- */
-body {
-    font-family: var(--font-sans);
-    font-size: 16px;
-}
-.post-title,
-.entry-header h1,
-.entry-header h2,
-.page-header h1 {
-    letter-spacing: -0.015em;
-    font-weight: 600;
+body { font-family: var(--font-sans); font-size: 16px; }
+.post-title, .entry-header h1, .entry-header h2, .page-header h1 {
+    letter-spacing: -0.015em; font-weight: 600;
 }
 .post-content { line-height: 1.78; }
-
-/* 날짜·메타는 모노스페이스로 기술적인 느낌 */
-.post-meta,
-.entry-footer,
-.breadcrumbs {
-    font-family: var(--font-mono);
-    font-size: 12.5px;
-    letter-spacing: 0.01em;
-    color: var(--secondary);
+.post-meta, .entry-footer, .breadcrumbs {
+    font-family: var(--font-mono); font-size: 12.5px;
+    letter-spacing: 0.01em; color: var(--secondary);
 }
-
-/* 코드 */
 code, pre, kbd { font-family: var(--font-mono); }
 
 /* ---------- 올리브 포인트 (절제) ---------- */
@@ -76,55 +57,78 @@ code, pre, kbd { font-family: var(--font-mono); }
     text-underline-offset: 0.2em;
 }
 .post-content a:hover { color: var(--accent-hover); }
-
-.menu .active {
-    color: var(--accent);
-    text-decoration-color: var(--accent);
-}
-
+.menu .active { color: var(--accent); text-decoration-color: var(--accent); }
 .post-entry:hover .entry-header h2 { color: var(--accent); }
+blockquote { border-inline-start: 2px solid var(--accent) !important; color: var(--secondary); }
+::selection { background: color-mix(in srgb, var(--accent) 28%, transparent); }
 
-blockquote {
-    border-inline-start: 2px solid var(--accent) !important;
-    color: var(--secondary);
+/* =========================================================
+   홈 히어로
+   ========================================================= */
+.home-info.first-entry {
+    min-height: auto;
+    margin: 48px 0 0 0;
 }
-
-::selection {
-    background: color-mix(in srgb, var(--accent) 28%, transparent);
+.home-eyebrow {
+    margin: 0 0 18px 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
 }
-
-/* ---------- 홈: 인사말 + 섹션 인덱스 ---------- */
 .home-info .entry-header h1 {
-    font-size: 24px;
+    font-size: 44px;
     font-weight: 600;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
     color: var(--primary);
 }
-.home-info .entry-content {
+.home-intro {
+    margin-top: 18px;
+    max-width: 50ch;
+    font-size: 17px;
+    line-height: 1.65;
     color: var(--secondary);
-    font-size: 15px;
-    --content-gap: 0;
+}
+.home-social { margin-top: 22px; }
+
+/* 구획 라벨 — 모노 + 헤어라인 룰 (leerob/paco 식) */
+.section-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 52px 0 18px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--secondary);
+}
+.section-eyebrow::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
 }
 
-/* 섹션 인덱스 — 헤어라인으로 구분된 그리드 (이모지 없이, 모노 인덱스) */
+/* 섹션 인덱스 — 헤어라인 그리드 + hover 화살표 */
 .track-cards {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1px;
-    margin: 30px 0 6px;
     background: var(--border);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;
 }
-@media (max-width: 640px) {
-    .track-cards { grid-template-columns: 1fr; }
-}
+@media (max-width: 640px) { .track-cards { grid-template-columns: 1fr; } }
 .track-card {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    padding: 22px 20px;
+    gap: 6px;
+    padding: 24px 22px;
     background: var(--theme);
     transition: background 0.15s ease;
 }
@@ -137,7 +141,7 @@ blockquote {
 }
 .track-card strong {
     color: var(--primary);
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 600;
     letter-spacing: -0.01em;
 }
@@ -154,6 +158,17 @@ blockquote {
     letter-spacing: 0.04em;
     color: var(--secondary);
 }
+.track-arrow {
+    position: absolute;
+    top: 22px;
+    right: 22px;
+    font-family: var(--font-mono);
+    color: var(--accent);
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.track-card:hover .track-arrow { opacity: 1; transform: translateX(0); }
 
 /* ---------- 글 목록 ---------- */
 .post-entry {
@@ -161,3 +176,13 @@ blockquote {
     padding-bottom: var(--gap);
 }
 .post-entry:last-child { border-bottom: none; }
+
+/* 모바일에서 히어로 살짝 축소 */
+@media (max-width: 640px) {
+    .home-info .entry-header h1 { font-size: 34px; }
+    .home-intro { font-size: 16px; }
+}
+
+/* 히어로 두 줄 소개 간격 */
+.home-intro p { margin: 0 0 0.35em; }
+.home-intro p:last-child { margin-bottom: 0; }
