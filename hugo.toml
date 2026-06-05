@@ -1,0 +1,100 @@
+baseURL = "https://stacknoah.com/"
+languageCode = "ko-kr"
+defaultContentLanguage = "ko"
+title = "Stacknoah"
+theme = "PaperMod"
+
+enableRobotsTXT = true
+enableEmoji = true
+buildDrafts = false
+buildFuture = false
+buildExpired = false
+
+# GitHub Pages requires the image cache in cacheDir (see deploy workflow).
+[caches]
+  [caches.images]
+    dir = ":cacheDir/images"
+
+[pagination]
+  pagerSize = 10
+
+[minify]
+  disableXML = true
+  minifyOutput = true
+
+# Search needs JSON output on the home page.
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
+
+[params]
+  env = "production"
+  title = "Stacknoah"
+  description = "머신러닝·데이터사이언스 라이트업과 Kaggle 회고 기록"
+  keywords = ["Machine Learning", "Data Science", "Kaggle", "ML"]
+  author = "Jaewoo Song"
+  DateFormat = "2006-01-02"
+  defaultTheme = "auto"        # dark / light / auto
+  disableThemeToggle = false
+  ShowReadingTime = true
+  ShowShareButtons = true
+  ShowPostNavLinks = true
+  ShowBreadCrumbs = true
+  ShowCodeCopyButtons = true
+  ShowWordCount = true
+  ShowToc = true
+  TocOpen = false
+  ShowRssButtonInSectionTermList = true
+
+  [params.homeInfoParams]
+    Title = "안녕하세요, 재우입니다 👋"
+    Content = "머신러닝·데이터사이언스를 공부하며 남기는 라이트업과 Kaggle 회고를 모아둡니다. 아래에서 글을 둘러보세요."
+
+  [[params.socialIcons]]
+    name = "github"
+    url = "https://github.com/stacknoah"
+  [[params.socialIcons]]
+    name = "rss"
+    url = "/index.xml"
+
+  [params.assets]
+    disableHLJS = false
+    favicon = "/favicon.ico"
+
+  # Fuse.js search options (used by /search/).
+  [params.fuseOpts]
+    isCaseSensitive = false
+    shouldSort = true
+    location = 0
+    distance = 1000
+    threshold = 0.4
+    minMatchCharLength = 0
+    keys = ["title", "permalink", "summary", "content"]
+
+[markup]
+  [markup.highlight]
+    noClasses = false
+    codeFences = true
+    guessSyntax = true
+    lineNos = true
+    style = "monokai"
+
+[[menu.main]]
+  identifier = "posts"
+  name = "글"
+  url = "/posts/"
+  weight = 10
+[[menu.main]]
+  identifier = "archives"
+  name = "아카이브"
+  url = "/archives/"
+  weight = 20
+[[menu.main]]
+  identifier = "tags"
+  name = "태그"
+  url = "/tags/"
+  weight = 30
+[[menu.main]]
+  identifier = "search"
+  name = "검색"
+  url = "/search/"
+  weight = 40
