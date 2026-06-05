@@ -10,7 +10,10 @@ buildDrafts = false
 buildFuture = false
 buildExpired = false
 
-# GitHub Pages requires the image cache in cacheDir (see deploy workflow).
+# content/ 밑 폴더(섹션)를 상단 메뉴에 자동 등록.
+# → 새 섹션 폴더만 만들면 메뉴가 알아서 생김 (메뉴 수동 편집 불필요)
+sectionPagesMenu = "main"
+
 [caches]
   [caches.images]
     dir = ":cacheDir/images"
@@ -22,32 +25,47 @@ buildExpired = false
   disableXML = true
   minifyOutput = true
 
-# Search needs JSON output on the home page.
 [outputs]
   home = ["HTML", "RSS", "JSON"]
 
+[markup]
+  [markup.goldmark.renderer]
+    unsafe = true
+  [markup.highlight]
+    noClasses = true
+    codeFences = true
+    guessSyntax = true
+    lineNos = true
+    style = "onedark"
+
 [params]
   env = "production"
+  comments = true
   title = "Stacknoah"
-  description = "머신러닝·데이터사이언스 라이트업과 Kaggle 회고 기록"
-  keywords = ["Machine Learning", "Data Science", "Kaggle", "ML"]
+  description = "드림핵 워게임 풀이, 화이트햇스쿨, OSCP, 보안 개념 정리 — 보안 공부 기록"
+  keywords = ["Security", "CTF", "Dreamhack", "Wargame", "OSCP", "WhiteHat School", "Pentest", "Infosec"]
   author = "Jaewoo Song"
   DateFormat = "2006-01-02"
-  defaultTheme = "auto"        # dark / light / auto
+  defaultTheme = "auto"
   disableThemeToggle = false
+
+  # 홈 최근글 피드에 포함할 섹션. 새 섹션 추가 시 여기에 이름만 더하면 됨
+  # (메뉴/홈카드는 자동, 이건 '최근글 피드'에만 영향)
+  mainSections = ["wargame", "whitehat", "oscp", "notes"]
+
   ShowReadingTime = true
-  ShowShareButtons = true
+  ShowShareButtons = false
   ShowPostNavLinks = true
   ShowBreadCrumbs = true
   ShowCodeCopyButtons = true
-  ShowWordCount = true
+  ShowWordCount = false
   ShowToc = true
   TocOpen = false
   ShowRssButtonInSectionTermList = true
 
   [params.homeInfoParams]
-    Title = "안녕하세요, 재우입니다 👋"
-    Content = "머신러닝·데이터사이언스를 공부하며 남기는 라이트업과 Kaggle 회고를 모아둡니다. 아래에서 글을 둘러보세요."
+    Title = "Stacknoah"
+    Content = "보안 공부 기록 — 푼 문제와 정리한 개념을 모아 둡니다."
 
   [[params.socialIcons]]
     name = "github"
@@ -56,11 +74,12 @@ buildExpired = false
     name = "rss"
     url = "/index.xml"
 
-  [params.assets]
-    disableHLJS = false
-    favicon = "/favicon.ico"
+  [params.giscus]
+    repo = "stacknoah/stacknoah.github.io"
+    repoId = "R_kgDOSxtdag"
+    category = "Announcements"
+    categoryId = "DIC_kwDOSxtdas4C-jQN"
 
-  # Fuse.js search options (used by /search/).
   [params.fuseOpts]
     isCaseSensitive = false
     shouldSort = true
@@ -70,31 +89,19 @@ buildExpired = false
     minMatchCharLength = 0
     keys = ["title", "permalink", "summary", "content"]
 
-[markup]
-  [markup.highlight]
-    noClasses = false
-    codeFences = true
-    guessSyntax = true
-    lineNos = true
-    style = "monokai"
-
-[[menu.main]]
-  identifier = "posts"
-  name = "글"
-  url = "/posts/"
-  weight = 10
-[[menu.main]]
-  identifier = "archives"
-  name = "아카이브"
-  url = "/archives/"
-  weight = 20
+# 섹션 메뉴는 자동(sectionPagesMenu). 아래는 수동으로 더하는 고정 항목만.
 [[menu.main]]
   identifier = "tags"
-  name = "태그"
+  name = "Tags"
   url = "/tags/"
-  weight = 30
+  weight = 80
 [[menu.main]]
   identifier = "search"
   name = "검색"
   url = "/search/"
-  weight = 40
+  weight = 90
+[[menu.main]]
+  identifier = "about"
+  name = "About"
+  url = "/about/"
+  weight = 100

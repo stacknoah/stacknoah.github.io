@@ -1,0 +1,163 @@
+/* =========================================================
+   Stacknoah — 차분한 올리브 + 뉴트럴 베이스
+   타이포그래피 중심 · 모노스페이스 디테일 · 절제된 포인트
+   ========================================================= */
+
+:root {
+    --font-sans: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Pretendard", "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", "JetBrains Mono",
+                 Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+/* ---------- LIGHT (부드러운 웜 화이트) ---------- */
+:root {
+    --theme: #f8f7f3;
+    --entry: #fefdfb;
+    --primary: #26241f;        /* 제목·강조 — 웜 블랙 */
+    --secondary: #8c8675;      /* 메타·보조 */
+    --tertiary: #efece4;
+    --content: #3a372f;        /* 본문 */
+    --code-bg: #edeae2;        /* 인라인 코드 */
+    --code-block-bg: #1f1e1b;  /* 코드블록 — 중립 다크 */
+    --border: #e7e3da;
+
+    --accent: #6f7a45;         /* 차분한 올리브 */
+    --accent-hover: #5a6338;
+}
+
+/* ---------- DARK (뉴트럴 웜 다크) ---------- */
+:root[data-theme="dark"] {
+    --theme: #1a1a17;
+    --entry: #222220;
+    --primary: #e6e3da;
+    --secondary: #8f8b7e;
+    --tertiary: #2a2925;
+    --content: #cdc9bf;
+    --code-bg: #2a2925;
+    --code-block-bg: #161613;
+    --border: #2c2b27;
+
+    --accent: #9aa066;
+    --accent-hover: #b0b67c;
+}
+
+/* ---------- 타이포그래피 ---------- */
+body {
+    font-family: var(--font-sans);
+    font-size: 16px;
+}
+.post-title,
+.entry-header h1,
+.entry-header h2,
+.page-header h1 {
+    letter-spacing: -0.015em;
+    font-weight: 600;
+}
+.post-content { line-height: 1.78; }
+
+/* 날짜·메타는 모노스페이스로 기술적인 느낌 */
+.post-meta,
+.entry-footer,
+.breadcrumbs {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    letter-spacing: 0.01em;
+    color: var(--secondary);
+}
+
+/* 코드 */
+code, pre, kbd { font-family: var(--font-mono); }
+
+/* ---------- 올리브 포인트 (절제) ---------- */
+.post-content a {
+    color: var(--accent);
+    text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    text-underline-offset: 0.2em;
+}
+.post-content a:hover { color: var(--accent-hover); }
+
+.menu .active {
+    color: var(--accent);
+    text-decoration-color: var(--accent);
+}
+
+.post-entry:hover .entry-header h2 { color: var(--accent); }
+
+blockquote {
+    border-inline-start: 2px solid var(--accent) !important;
+    color: var(--secondary);
+}
+
+::selection {
+    background: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+/* ---------- 홈: 인사말 + 섹션 인덱스 ---------- */
+.home-info .entry-header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--primary);
+}
+.home-info .entry-content {
+    color: var(--secondary);
+    font-size: 15px;
+    --content-gap: 0;
+}
+
+/* 섹션 인덱스 — 헤어라인으로 구분된 그리드 (이모지 없이, 모노 인덱스) */
+.track-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    margin: 30px 0 6px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+@media (max-width: 640px) {
+    .track-cards { grid-template-columns: 1fr; }
+}
+.track-card {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 22px 20px;
+    background: var(--theme);
+    transition: background 0.15s ease;
+}
+.track-card:hover { background: var(--entry); }
+.track-index {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+}
+.track-card strong {
+    color: var(--primary);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+.track-card em {
+    color: var(--secondary);
+    font-style: normal;
+    font-size: 13.5px;
+    line-height: 1.5;
+}
+.track-count {
+    margin-top: 2px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    color: var(--secondary);
+}
+
+/* ---------- 글 목록 ---------- */
+.post-entry {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: var(--gap);
+}
+.post-entry:last-child { border-bottom: none; }
