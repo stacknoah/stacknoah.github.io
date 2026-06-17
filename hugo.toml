@@ -76,8 +76,8 @@ sectionPagesMenu = "main"
     name = "github"
     url = "https://github.com/stacknoah"
   [[params.socialIcons]]
-    name = "rss"
-    url = "/index.xml"
+    name = "email"
+    url = "mailto:shelter021@icloud.com"
 
   [params.giscus]
     repo = "stacknoah/stacknoah.github.io"
