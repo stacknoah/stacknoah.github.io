@@ -51,7 +51,7 @@ sectionPagesMenu = "main"
 
   # 홈 최근글 피드에 포함할 섹션. 새 섹션 추가 시 여기에 이름만 더하면 됨
   # (메뉴/홈카드는 자동, 이건 '최근글 피드'에만 영향)
-  mainSections = ["wargame", "training", "oscp", "notes"]
+  mainSections = ["why", "now", "wargame", "what"]
 
   ShowReadingTime = true
   ShowShareButtons = false
@@ -69,7 +69,7 @@ sectionPagesMenu = "main"
     Content = """
 보안을 공부합니다.
 
-당위와 지식을 기록합니다.
+당위와 논리를 기록합니다.
 """
 
   [[params.socialIcons]]

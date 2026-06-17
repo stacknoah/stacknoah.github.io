@@ -1,7 +1,7 @@
 +++
 title = "Wargame"
-description = "워게임 풀이와 당위"
-weight = 10
+description = "풀이 과정을 기록합니다."
+weight = 30
 +++
 
-워게임을 풀고, 왜 그렇게 풀리는지(당위)까지 정리한다.
+워게임·CTF 풀이. 어떻게 접근했고 왜 통했는지.
