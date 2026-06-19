@@ -1,9 +1,8 @@
 ---
-title: types
+title: "\bTypes"
 date: 2026-06-19
 draft: false
 tags:
-  - XSS
 summary: 웹 사이트에 악성 스크립트 삽입 → 이용자 웹에서 실행
 ---
 - 정의: 입력이 코드로 해석되게 만드는 결함
