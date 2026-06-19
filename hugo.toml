@@ -48,6 +48,8 @@ sectionPagesMenu = "main"
   DateFormat = "2006-01-02"
   defaultTheme = "auto"
   disableThemeToggle = false
+  disableNextPrev = true
+
 
   # 홈 최근글 피드에 포함할 섹션. 새 섹션 추가 시 여기에 이름만 더하면 됨
   # (메뉴/홈카드는 자동, 이건 '최근글 피드'에만 영향)

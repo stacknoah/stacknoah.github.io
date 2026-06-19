@@ -1,12 +1,15 @@
-+++
-title = "[워게임 이름] 풀이"
-date = 2026-06-05T00:00:00+09:00
-draft = true
-tags = ["dreamhack", "pwnable"]
-categories = ["wargame"]
-summary = "한 줄 요약 — 어떤 취약점이고 무엇을 배웠는지"
-ShowToc = true
-+++
+---
+title: "[워게임 이름] 풀이"
+date: 2026-06-19T00:00:00+09:00
+draft: true
+tags:
+  - dreamhack
+  - pwnable
+categories:
+  - wargame
+summary: 한 줄 요약 — 어떤 취약점이고 무엇을 배웠는지
+ShowToc: true
+---
 
 > 이 글은 템플릿이다. 복사해서 새 풀이 작성에 쓰고, `draft = false`로 바꾸면 게시된다.
 

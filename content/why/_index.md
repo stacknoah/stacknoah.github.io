@@ -1,9 +1,5 @@
-+++
-
-title = "Why"
-
-description = "기저와 당위"
-
-weight = 10
-
-+++
+---
+title: "Why"
+description: "기저와 당위"
+weight: 10
+---
