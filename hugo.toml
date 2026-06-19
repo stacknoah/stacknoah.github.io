@@ -42,7 +42,7 @@ sectionPagesMenu = "main"
   env = "production"
   comments = true
   title = "Stacknoah"
-  description = "드림핵 워게임 풀이, 화이트햇스쿨, OSCP, 보안 개념 정리 — 보안 공부 기록"
+  description = "보안을 공부하며 당위와 논리를 기록합니다."
   keywords = ["Security", "CTF", "Dreamhack", "Wargame", "OSCP", "WhiteHat School", "Pentest", "Infosec"]
   author = "Jaewoo Song"
   DateFormat = "2006-01-02"
@@ -81,9 +81,9 @@ sectionPagesMenu = "main"
 
   [params.giscus]
     repo = "stacknoah/stacknoah.github.io"
-    repoId = "PASTE_FROM_GISCUS_APP"
+    repoId = "R_kgDOSxtdag"
     category = "Announcements"
-    categoryId = "PASTE_FROM_GISCUS_APP"
+    categoryId = "DIC_kwDOSxtdas4C-jQN"
 
   [params.fuseOpts]
     isCaseSensitive = false
