@@ -43,7 +43,7 @@ sectionPagesMenu = "main"
   comments = true
   title = "Stacknoah"
   description = "보안을 공부하며 당위와 논리를 기록합니다."
-  keywords = ["Security", "CTF", "Dreamhack", "Wargame", "OSCP", "WhiteHat School", "Pentest", "Infosec"]
+  keywords = ["Security", "CTF", "Dreamhack", "WriteUp", "OSCP", "WhiteHat School", "Pentest", "Infosec"]
   author = "Jaewoo Song"
   DateFormat = "2006-01-02"
   defaultTheme = "auto"
@@ -53,7 +53,7 @@ sectionPagesMenu = "main"
 
   # 홈 최근글 피드에 포함할 섹션. 새 섹션 추가 시 여기에 이름만 더하면 됨
   # (메뉴/홈카드는 자동, 이건 '최근글 피드'에만 영향)
-  mainSections = ["why", "what", "wargame", "ai", "insights", "activity"]
+  mainSections = ["why", "what", "writeup", "ai", "insights", "activity"]
 
   ShowReadingTime = true
   ShowShareButtons = false
