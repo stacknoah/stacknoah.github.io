@@ -186,3 +186,28 @@ blockquote { border-inline-start: 2px solid var(--accent) !important; color: var
 /* 히어로 두 줄 소개 간격 */
 .home-intro p { margin: 0 0 0.35em; }
 .home-intro p:last-child { margin-bottom: 0; }
+
+/* ===== 글 목록 — 한 줄 리스트 (제목 + 날짜) ===== */
+.post-entry {
+    position: relative; display: flex; align-items: baseline; gap: 1.2rem;
+    padding: 0.7rem 0; margin: 0; border: none;
+    border-bottom: 1px solid var(--border);
+    background: none; box-shadow: none; border-radius: 0;
+}
+.post-entry:hover { background: none; box-shadow: none; transform: none; }
+.post-entry .entry-header { margin: 0; flex: 1; min-width: 0; }
+.post-entry .entry-header h2 {
+    font-size: 1.05rem; line-height: 1.4; margin: 0; font-weight: 600;
+    letter-spacing: -0.01em; color: var(--primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.post-entry:hover .entry-header h2 { color: var(--accent); }
+.entry-date {
+    flex-shrink: 0; font-family: var(--font-mono); font-size: 0.8rem;
+    color: var(--secondary); white-space: nowrap;
+}
+.entry-hint {
+    font-family: var(--font-mono); font-size: 0.7rem; color: var(--secondary);
+    border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; margin-left: 6px;
+}
+.post-entry .entry-link { position: absolute; inset: 0; }
