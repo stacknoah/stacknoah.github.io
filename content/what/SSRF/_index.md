@@ -1,5 +1,6 @@
 ---
-title: "SSRF"
-draft: true
-tags: ["SSRF"]
+title: SSRF
+draft: false
+tags:
+  - SSRF
 ---

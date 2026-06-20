@@ -1,5 +1,5 @@
 ---
-title: Overview
+title: XSS Overview
 date: 2026-06-20
 draft: false
 tags:

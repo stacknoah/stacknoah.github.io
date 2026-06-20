@@ -4,6 +4,7 @@ defaultContentLanguage = "ko"
 title = "Stacknoah"
 theme = "PaperMod"
 
+enableGitInfo = true
 enableRobotsTXT = true
 enableEmoji = true
 buildDrafts = false
@@ -27,6 +28,9 @@ sectionPagesMenu = "main"
 
 [outputs]
   home = ["HTML", "RSS", "JSON"]
+
+[frontmatter]
+  lastmod = ["lastmod", ":git", "date", "modified"]
 
 [markup]
   [markup.goldmark.renderer]
