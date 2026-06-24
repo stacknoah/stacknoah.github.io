@@ -22,6 +22,7 @@
 {{- if .IsHome }}
 {{- $pages = where site.RegularPages "Type" "in" site.Params.mainSections }}
 {{- $pages = where $pages "Params.hiddenInHomeList" "!=" "true" }}
+{{- $pages = first 3 (sort $pages "Date" "desc") }}
 {{- end }}
 
 {{- $paginator := .Paginate $pages }}
