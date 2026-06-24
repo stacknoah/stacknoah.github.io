@@ -1,6 +1,5 @@
 ---
-title: Write-up example
-description: 풀이 과정
+title: Templates
 weight: 30
-draft: true
+draft: false
 ---

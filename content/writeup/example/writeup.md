@@ -1,8 +1,7 @@
 ---
-title: "[챌린지명 (대회, 난이도)]"
+title: "WriteUp"
 date: 2026-06-24
 draft: true
-tags: ["[카테고리]"]
 ShowToc: true
 ---
 
