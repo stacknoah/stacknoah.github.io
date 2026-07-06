@@ -22,7 +22,7 @@ ShowToc: true
 
 ## 분석
 
-```
+```python 
 try:
     FLAG = open("./flag.txt", "r").read()  # Flag is here!!
 
@@ -41,16 +41,25 @@ def img_viewer():
             return render_template("img_viewer.html", img=img)
 		try:
             data = requests.get(url, timeout=3).content
+            # requests: 다른 서버로 요청 보낼 때 requests.get(url)
+            # 검증 진행하지 않고 바로 보내 SSRF 취약점 발생
+            # .content: 응답 본문을 바이트로 꺼내오는 속성
             img = base64.b64encode(data).decode("utf8")
         except:
             data = open("error.png", "rb").read()
             img = base64.b64encode(data).decode("utf8")
         return render_template("img_viewer.html", img=img)
+
+local_host = "127.0.0.1"
+local_port = random.randint(1500, 1800)
 ```
 1. 항상 flag read/반환은 안 함 → 이 flag를 어떻게 내가 읽어낼 것인지가 이 문제의 핵심
 2. 만약 /~처럼 상대경로로 접근 → localhost:8000 + url
 3. 만약 localhost 입력 시도 -> 에러페이지 반환
 4. try~: 접근해서 컨텐츠 가져온 뒤 render_template으로 반환
+5. http://127.0.0.1:<1500~1800>/flag.txt: 이 경로에 flag 존재 
+6. 어떻게 저 주소로 접근할 것인가? 그리고 포트는 어떻게 확정할 것인가?
+7. 
 
 | 대상 | 동작 |
 |---|---|

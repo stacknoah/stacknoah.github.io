@@ -16,7 +16,50 @@ ShowToc: true
 
 ## 라이트업 칸 매핑
 
-- 0~2 → 분석 
-- 3 → 취약점 
-- 4~5 → 공격 
-- 기록은 이 사고의 결과물이라, 사고 틀과 기록 틀을 따로 외울 필요가 없다.
+1. 표면 맵핑
+	@app.route('/create_note', methods=['POST'])
+	def post_create_note():
+	    content = request.form.get('content')
+	    if not isinstance(content, str):
+	        abort(400)
+	    create_note(content)
+	    return redirect(url_for('get_index'))
+	-> 내용 타입 검증후 노트로 만들어서 반환
+
+	@app.route('/update_note', methods=['POST'])
+	def get_update_note():
+	    note_id = request.form.get('note_id')
+	    if not isinstance(note_id, str) or not note_id.isdigit():
+	        abort(400)
+	    note_id = int(note_id)
+	    if note_id not in notes:
+	        abort(404)
+	    content = request.form.get('content')
+	    if not isinstance(content, str):
+	        abort(400)
+	    update_note(note_id, content)
+	    return redirect(url_for('get_index'))
+	note_id 요청값으로 보내서 타입 검증 + 존재유무 검증 + content 타입 검증 -> 이 경우에는 입력값으로 노트 내용을 수정
+
+	@app.route('/delete_note', methods=['POST'])
+	def post_delete_note():
+	    note_id = request.form.get('note_id')
+	    if not isinstance(note_id, str) or not note_id.isdigit():
+	        abort(400)
+	    note_id = int(note_id)
+	    if note_id not in notes:
+	        abort(404)
+	    delete_note(note_id)
+	    return redirect(url_for('get_index'))
+	note_id 타입 검증, 존재 유무 검증 -> 통과시 해당 노트 삭제 
+
+	@app.route('/backup_notes', methods=['POST'])
+	def post_backup_notes():
+	    if len(notes) == 0:
+	        abort(404)
+	    backup_timestamp = request.cookies.get('backup-timestamp', f'{time.time()}')
+	    if not isinstance(backup_timestamp, str):
+	        abort(400)
+	    backup_notes(backup_timestamp)
+	    return redirect(url_for('get_index'))
+	길이 0이거나 backup_timestamp str 아니면 동작 중단 정상 진행시 노트 백업해두기
