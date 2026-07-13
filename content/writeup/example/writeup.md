@@ -1,7 +1,7 @@
 ---
 title: "<문제명 (출처, 난이도)>"
 date: 2026-07-07
-draft: false
+draft: true
 tags: ["<취약점 분류>"]
 ShowToc: true
 ---

