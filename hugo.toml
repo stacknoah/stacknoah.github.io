@@ -1,5 +1,5 @@
 baseURL = "https://stacknoah.com/"
-languageCode = "ko-kr"
+locale = "ko-kr"
 defaultContentLanguage = "ko"
 title = "Stacknoah"
 theme = "PaperMod"

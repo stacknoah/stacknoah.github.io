@@ -1,5 +1,5 @@
 ---
-title: "<문제명 (출처, 난이도)>"
+title: "Write Up"
 date: 2026-07-07
 draft: true
 tags: ["<취약점 분류>"]
