@@ -1,8 +1,8 @@
 ---
-title: "Write Up"
-date: 2026-07-07
+title: "MemoVault"
+date: 2026-07-15
 draft: true
-tags: ["<취약점 분류>"]
+tags: ["SQLi"]
 ShowToc: true
 ---
 

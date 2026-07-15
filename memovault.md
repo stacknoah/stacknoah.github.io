@@ -1,13 +1,15 @@
 ---
-title: "Write Up"
-date: 2026-07-07
+title: "MemoVault"
+date: 2026-07-15
 draft: true
-tags: ["<취약점 분류>"]
+tags: ["SQLi"]
 ShowToc: true
 ---
 
-## 풀이
+## 공격표면
 - 뭘 보고 시작했나 (구조/입력점/승리조건 간단히)
+
+## 풀이
 - 사고 흐름 순서대로, 막다른 길 포함
 - payload / 최종 요청
 - flag
