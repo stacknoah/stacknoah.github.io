@@ -14,11 +14,10 @@ npm run dev
 ```
 src/content/
   notes/      짧은 학습 기록. /notes/파일명 으로 열림
-  articles/   긴 글. description 필드가 목록 요약으로 보임
-  projects/   프로젝트 메타와 개요
-  logs/       프로젝트 진행 기록. project 필드로 프로젝트와 연결
+  articles/   긴 글
+  projects/   프로젝트
 src/data/
-  roadmap.ts  메인 페이지 공부 로드맵
+  roadmap.ts  첫 화면 주제 목록
 ```
 
 ## 대분류
@@ -60,12 +59,6 @@ summary: 한 줄 소개
 repo: https://github.com/...   # 생략 가능
 ---
 
-# logs
----
-project: 프로젝트-파일명
-date: 2026-08-25
-title: 기록 제목
----
 ```
 
 주제 목록은 `src/data/roadmap.ts`에서 다섯 그룹 아래 카테고리를 수정.

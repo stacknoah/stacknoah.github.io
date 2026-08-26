@@ -59,14 +59,4 @@ const projects = defineCollection({
   }),
 });
 
-// 프로젝트 진행 기록. project에 프로젝트 파일명(slug)을 적으면 해당 상세 페이지에 쌓임
-const logs = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/logs' }),
-  schema: z.object({
-    project: z.string(),
-    date: z.coerce.date(),
-    title: z.string(),
-  }),
-});
-
-export const collections = { notes, articles, projects, logs };
+export const collections = { notes, articles, projects };

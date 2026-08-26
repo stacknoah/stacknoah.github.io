@@ -1,7 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
-import { korDate, ymd } from '../../lib/format';
+import { ymd } from '../../lib/format';
 import { domainLabel } from '../../lib/categories';
 import Attachments from '../../components/Attachments.astro';
 
@@ -17,14 +17,6 @@ const { entry } = Astro.props;
 const { Content } = await render(entry);
 
 const statusLabel = { ongoing: '진행 중', done: '완료', paused: '중단' } as const;
-
-const logs = (await getCollection('logs', (l) => l.data.project === entry.id)).sort(
-  (a, b) => b.data.date.getTime() - a.data.date.getTime()
-);
-
-const rendered = await Promise.all(
-  logs.map(async (log) => ({ log, Content: (await render(log)).Content }))
-);
 
 const period = `${ymd(entry.data.start)} ~ ${entry.data.end ? ymd(entry.data.end) : '현재'}`;
 ---
@@ -60,24 +52,6 @@ const period = `${ymd(entry.data.start)} ~ ${entry.data.end ? ymd(entry.data.end
     </div>
     <Attachments items={entry.data.attachments} />
 
-    {
-      rendered.length > 0 && (
-        <section class="timeline">
-          <p class="section-label">log</p>
-          {rendered.map(({ log, Content: LogContent }) => (
-            <div class="log">
-              <div class="log-head">
-                <span class="log-date mono">{korDate(log.data.date)}</span>
-                <span class="log-title">{log.data.title}</span>
-              </div>
-              <div class="prose log-body">
-                <LogContent />
-              </div>
-            </div>
-          ))}
-        </section>
-      )
-    }
   </article>
 </Base>
 
@@ -139,37 +113,4 @@ const period = `${ymd(entry.data.start)} ~ ${entry.data.end ? ymd(entry.data.end
     margin: 1rem 0 0;
   }
 
-  .timeline {
-    margin-top: 4rem;
-  }
-
-  .log {
-    padding: 1.5rem 0;
-  }
-
-  .log + .log {
-    border-top: 1px solid var(--line);
-  }
-
-  .log-head {
-    display: flex;
-    align-items: baseline;
-    gap: 0.875rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .log-date {
-    font-size: 0.75rem;
-    color: var(--ink-3);
-    flex-shrink: 0;
-  }
-
-  .log-title {
-    font-weight: 600;
-    font-size: 1rem;
-  }
-
-  .log-body {
-    font-size: 0.9375rem;
-  }
 </style>

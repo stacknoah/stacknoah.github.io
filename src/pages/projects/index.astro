@@ -6,16 +6,9 @@ import { ymd } from '../../lib/format';
 import { domainLabel } from '../../lib/categories';
 
 const projects = await getCollection('projects');
-const logs = await getCollection('logs');
 
 const statusLabel = { ongoing: '진행 중', done: '완료', paused: '중단' } as const;
 const statusOrder = { ongoing: 0, paused: 1, done: 2 } as const;
-
-const lastUpdate = new Map<string, Date>();
-for (const log of logs) {
-  const prev = lastUpdate.get(log.data.project);
-  if (!prev || log.data.date > prev) lastUpdate.set(log.data.project, log.data.date);
-}
 
 const sorted = projects.sort((a, b) => {
   const s = statusOrder[a.data.status] - statusOrder[b.data.status];
@@ -34,7 +27,6 @@ const sorted = projects.sort((a, b) => {
   <div class="list rise rise-2" data-filter-group>
     {
       sorted.map((p) => {
-        const updated = lastUpdate.get(p.id);
         return (
           <a href={`/projects/${p.id}`} class="item" data-domain={p.data.domain ?? ''}>
             <div class="item-head">
@@ -46,9 +38,7 @@ const sorted = projects.sort((a, b) => {
                 <span class="chip">{domainLabel(p.data.domain)}</span>
               )}
               <span class="item-title">{p.data.title}</span>
-              <span class="date mono">
-                {updated ? `업데이트 ${ymd(updated)}` : `시작 ${ymd(p.data.start)}`}
-              </span>
+              <span class="date mono">{ymd(p.data.start)}</span>
             </div>
             <p class="desc">{p.data.summary}</p>
           </a>

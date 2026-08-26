@@ -9,12 +9,10 @@ import type { HeatEntry } from '../components/Heatmap.tsx';
 
 const notes = await getCollection('notes');
 const articles = await getCollection('articles');
-const logs = await getCollection('logs');
 
 const entries: HeatEntry[] = [
   ...notes.map((e) => ({ date: ymd(e.data.date), title: e.data.title, kind: '노트' as const })),
   ...articles.map((e) => ({ date: ymd(e.data.date), title: e.data.title, kind: '글' as const })),
-  ...logs.map((e) => ({ date: ymd(e.data.date), title: e.data.title, kind: '프로젝트' as const })),
 ];
 ---
 
@@ -67,12 +65,10 @@ const entries: HeatEntry[] = [
     }
   }
 
-
   /* 큰 쉼은 페이지에 한 번뿐. 로드맵 아래는 main 의 padding-bottom 이 받는다 */
   .block {
     margin-bottom: 0;
   }
-
 
   /* 왼쪽 히트맵, 오른쪽 프로젝트 */
   .split {

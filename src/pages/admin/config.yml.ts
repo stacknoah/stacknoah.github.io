@@ -165,33 +165,6 @@ const config = {
         { name: 'body', label: '개요', widget: 'markdown' },
       ],
     },
-    {
-      name: 'logs',
-      label: '진행 기록',
-      label_singular: '기록',
-      description: '프로젝트에 날짜별로 쌓이는 기록',
-      folder: 'src/content/logs',
-      create: true,
-      slug: '{{fields.project}}-{{year}}{{month}}{{day}}',
-      extension: 'md',
-      format: 'yaml-frontmatter',
-      summary: '{{project}}  {{title}}',
-      sortable_fields: ['date'],
-      fields: [
-        {
-          name: 'project',
-          label: '프로젝트',
-          widget: 'relation',
-          collection: 'projects',
-          search_fields: ['title'],
-          display_fields: ['title'],
-          value_field: '{{slug}}',
-        },
-        dateField,
-        { name: 'title', label: '기록 제목', widget: 'string' },
-        { name: 'body', label: '내용', widget: 'markdown' },
-      ],
-    },
   ],
 };
 
