@@ -160,7 +160,7 @@ const styles = `
 /* 색을 나르는 건 이것뿐. 칸 넓이의 6.2퍼센트라 원액을 써도 안 무겁다 */
 .heatmap .mark::after {
   width: max(3px, var(--core));
-  background: var(--accent-ink);
+  background: var(--accent-mid);
 }
 
 /* 편수는 색이 아니라 지름으로 갈린다. 흑백으로 찍어도 같게 읽힌다 */

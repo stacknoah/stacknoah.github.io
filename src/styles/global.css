@@ -14,7 +14,10 @@
 
   /* 터키석은 색소 하나뿐이다. 나머지는 전부 이걸 옅게 섞은 것이고,
      넓게 덮는 자리일수록 옅게 쓴다 */
-  --accent-ink: #007472;    /* 종이 위 5.47. 8px 이하 도형, 1~2px 선, 글자 */
+  /* 도형과 글자를 가른다. 도형은 밝은 쪽이 사진에서 고른 터키석에 가깝고,
+     글자는 본문 대비 4.5 를 넘어야 해서 진한 쪽을 쓴다 */
+  --accent-mid: #22928f;    /* 3.67. 도형과 아이콘과 큰 글자. 글자에는 금지 */
+  --accent-ink: #007472;    /* 5.47. 본문 글자와 작은 글자 */
   --accent-strong: #005855; /* 8.09. 눌린 상태 */
 
   /* 종이 위 무게가 각각 1.12 / 1.22 / 1.42 다.
@@ -294,7 +297,7 @@ a {
   width: 5px;
   height: 5px;
   border-radius: 1.5px;
-  background: var(--accent-ink);
+  background: var(--accent-mid);
 }
 
 /* 고정폭 스택에 한글이 없어서 .mono 로 감싼 한글은 시스템 글꼴로 떨어진다.
@@ -326,7 +329,7 @@ a {
   top: 50%;
   width: 2px;
   height: 0;
-  background: var(--accent-ink);
+  background: var(--accent-mid);
   transform: translateY(-50%);
   transition: height var(--out) var(--ease);
 }
