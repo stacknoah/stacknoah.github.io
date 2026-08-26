@@ -75,13 +75,6 @@ export default function Heatmap({ entries, months = 12 }: Props) {
     // 겹치지 않는 값으로. 전체 누적은 계속 늘고, 30일은 지금 속도, 연속은 습관
     const total = entries.length;
 
-    let last30 = 0;
-    const d30 = new Date(today);
-    d30.setDate(d30.getDate() - 29);
-    for (const [key, list] of byDate) {
-      const d = new Date(key);
-      if (d >= d30 && d <= today) last30 += list.length;
-    }
 
     let streak = 0;
     const probe = new Date(today);
@@ -93,7 +86,7 @@ export default function Heatmap({ entries, months = 12 }: Props) {
     }
 
 
-    return { weeks, monthTicks, byDate, stats: { total, last30, streak, todayDone } };
+    return { weeks, monthTicks, byDate, stats: { total, streak, todayDone } };
   }, [entries, months]);
 
   const gridWidth = weeks.length * (CELL + GAP) - GAP;
@@ -108,22 +101,17 @@ export default function Heatmap({ entries, months = 12 }: Props) {
   return (
     <div className="heatmap">
       <div className="stats">
-        <div className="stat lead">
-          <span className="stat-num">{stats.total}</span>
-          <span className="stat-label meta">전체 누적</span>
-        </div>
-        <div className="stat">
-          <span className="stat-num">{stats.last30}</span>
-          <span className="stat-label meta">최근 30일</span>
-        </div>
-        <div className="stat">
-          <span className="stat-num">
-            {stats.streak}
-            <em>일</em>
-            {stats.todayDone && <i className="live" aria-label="오늘도 기록함" />}
-          </span>
-          <span className="stat-label meta">연속</span>
-        </div>
+        <span className="stat">
+          <span className="lab">전체</span>
+          <span className="num">{stats.total}</span>
+          <span className="unit">편</span>
+        </span>
+        <span className="stat">
+          <span className="lab">연속</span>
+          <span className="num">{stats.streak}</span>
+          <span className="unit">일</span>
+          {stats.todayDone && <i className="live" aria-label="오늘도 기록함" />}
+        </span>
       </div>
 
       <div className="scroll" ref={scrollRef}>
@@ -215,74 +203,47 @@ export default function Heatmap({ entries, months = 12 }: Props) {
 
       <style>{`
         .heatmap { position: relative; }
+        /* 라벨을 앞에 두고 한 줄로. 숫자 아래 캡션을 달면 활자가 겉돈다 */
         .heatmap .stats {
           display: flex;
           flex-wrap: wrap;
-          align-items: flex-end;
-          gap: 1rem 2rem;
+          align-items: baseline;
+          gap: 0.5rem 2.5rem;
           margin-bottom: 2rem;
         }
         .heatmap .stat {
-          display: flex;
-          flex-direction: column;
+          display: inline-flex;
+          align-items: baseline;
+          gap: 0.4rem;
         }
-        .heatmap .stat-num {
-          position: relative;
-          font-size: var(--t-4);
-          font-weight: 600;
-          letter-spacing: var(--track-3);
-          line-height: 1.05;
-          color: var(--ink-2);
-          /* 세로로 줄 세울 일이 없는 숫자다. 고정폭으로 두면 1 좌우의 빈 자리가
-             큰 단에서 아래 라벨과의 왼쪽 정렬을 무너뜨린다 */
-          font-variant-numeric: lining-nums proportional-nums;
-        }
-        /* 구역 대표. 네 값 중 유일하게 줄어들지 않고, 바로 아래 히트맵이
-           같은 값을 그림으로 다시 보여준다 */
-        .heatmap .stat.lead {
-          margin-right: 0.5rem;
-        }
-        .heatmap .stat.lead .stat-num {
-          font-size: var(--t-2);
+        .heatmap .lab {
+          font-size: var(--t-7);
           font-weight: 500;
-          letter-spacing: var(--track-2);
-          color: var(--ink);
-        }
-        .heatmap .stat-num em {
-          font-style: normal;
-          font-size: 0.55em;
-          font-weight: 500;
-          letter-spacing: 0;
-          margin-left: 1px;
+          letter-spacing: var(--track-ko);
           color: var(--ink-3);
         }
-        /* 크기와 색과 자간은 .meta 가 정한다. 여기서는 자리만 */
-        .heatmap .stat-label {
-          margin-top: 6px;
+        .heatmap .num {
+          font-size: var(--t-2);
+          font-weight: 500;
+          line-height: 1;
+          letter-spacing: var(--track-2);
+          color: var(--ink);
+          font-variant-numeric: lining-nums proportional-nums;
         }
-        /* 그림 안쪽 눈금. 크기는 그대로 두고 글꼴만 본문 서체로 */
-        .heatmap .month-row,
-        .heatmap .legend {
-          font-family: var(--font-sans);
-          letter-spacing: var(--track-ko);
-        }
-        /* 툴팁은 어두운 바탕이라 .meta 의 색을 물려받으면 안 됨 */
-        .heatmap .tip-kind {
-          font-family: var(--font-sans);
-          font-size: 0.6875rem;
-          letter-spacing: var(--track-ko);
-          opacity: 0.7;
-          margin-right: 3px;
+        .heatmap .unit {
+          font-size: var(--t-6);
+          font-weight: 500;
+          color: var(--ink-3);
+          margin-left: -0.15rem;
         }
         /* 오늘도 기록했을 때만 켜지는 점 */
         .heatmap .live {
-          display: inline-block;
           width: 5px;
           height: 5px;
           border-radius: 50%;
           background: var(--accent);
-          margin-left: 5px;
-          vertical-align: 0.6em;
+          align-self: center;
+          margin-left: 0.1rem;
         }
         .heatmap .scroll { overflow-x: auto; padding-bottom: 4px; }
         .heatmap .month-row {
