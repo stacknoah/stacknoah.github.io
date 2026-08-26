@@ -4,42 +4,49 @@
   --bg: #fcfcfb;
   --ink: #1a1a19;
   --ink-2: #52524e;
-  --ink-3: #83837e;
+  /* #83837e 는 종이 위 3.71 이라 작은 글자 기준 4.5 에 못 미쳤다.
+     날짜 요약 라벨 태그가 전부 이 색인데다, hover 면이 회색에서
+     터키석 8퍼센트로 바뀌면 더 내려간다. 여기서 5.22 로 올린다 */
+  --ink-3: #6b6b66;
   --line: #e7e7e3;
   --line-strong: #d6d6d1;
   --surface: #f4f4f1;
 
-  /* 터키석. OKLCH 색상각 192도.
-     accent 는 밝아서 채움 전용(대비 2.51).
-     아이콘과 큰 글자는 accent-mid(3.67), 본문 글자와 링크는 accent-ink(5.47) */
-  --accent: #51b0ad;
-  --accent-mid: #22928f;
-  --accent-ink: #007472;
-  --accent-strong: #005855;
-  --accent-soft: #dff4f2;
+  /* 터키석은 색소 하나뿐이다. 나머지는 전부 이걸 옅게 섞은 것이고,
+     넓게 덮는 자리일수록 옅게 쓴다 */
+  --accent-ink: #007472;    /* 종이 위 5.47. 8px 이하 도형, 1~2px 선, 글자 */
+  --accent-strong: #005855; /* 8.09. 눌린 상태 */
 
-  /* 히트맵 순차 스케일. 한 색조로 밝음에서 어두움, 단계마다 밝기가 충분히 벌어짐 */
-  --heat-0: #f0efec;
-  --heat-1: #7fcac7;
-  --heat-2: #4fadaa;
-  --heat-3: #22928f;
-  --heat-4: #005855;
+  /* 종이 위 무게가 각각 1.12 / 1.22 / 1.42 다.
+     --surface(1.07) --line(1.21) --line-strong(1.42) 과 같은 칸에 들어간다.
+     넓은 면에 깔리는 터키석이 회색 선보다 무거워지지 않는다.
+     앞줄은 color-mix 를 못 쓰는 브라우저용 근사값이다 */
+  --accent-08: #e8f1f1;
+  --accent-08: color-mix(in srgb, var(--accent-ink) 8%, transparent);
+  --accent-14: #d9e9e8;
+  --accent-14: color-mix(in srgb, var(--accent-ink) 14%, transparent);
+  --accent-24: #c0dcda;
+  --accent-24: color-mix(in srgb, var(--accent-ink) 24%, transparent);
+
+  /* 이번에 못 건드리는 두 파일이 이 이름을 쓴다.
+     src/pages/projects/index.astro 와 src/pages/projects/[...slug].astro 의
+     진행중 점이다. 지우면 그 점이 transparent 로 사라지므로 별칭으로 남긴다.
+     그 둘을 --accent-ink 로 바꾸는 날 이 줄을 지운다 */
+  --accent: var(--accent-ink);
 
   --w-wide: 68rem;
   --w-text: 46rem;
 
-  /* 활자 사다리 여덟 단. 위는 넓게 벌리고 아래로 갈수록 좁힌다.
-     큰 글자는 조금 다르면 실수로 보이고, 작은 글자는 조금만 달라도 갈린다 */
-  --t-1: clamp(2.25rem, 5vw, 3.5rem);    /* 워드마크 */
-  --t-2: clamp(1.75rem, 3.4vw, 2.25rem); /* 구역 대표 숫자 */
-  --t-3: 1.5rem;     /* 로드맵 갈아끼우는 줄 */
-  --t-4: 1.125rem;   /* 프로젝트 이름, 보조 숫자 */
-  --t-5: 0.9375rem;  /* 로드맵 항목 */
-  --t-6: 0.8125rem;  /* 설명문 */
-  --t-7: 0.75rem;    /* 한글 라벨 */
-  --t-8: 0.6875rem;  /* 로마자 라벨 */
+  /* 활자 사다리 여덟 단. 위는 넓게 벌리고 아래로 갈수록 좁힌다 */
+  --t-1: clamp(2.25rem, 5vw, 3.5rem);
+  --t-2: clamp(1.75rem, 3.4vw, 2.25rem);
+  --t-3: 1.5rem;
+  --t-4: 1.125rem;
+  --t-5: 0.9375rem;
+  --t-6: 0.8125rem;
+  --t-7: 0.75rem;
+  --t-8: 0.6875rem;
 
-  /* 자간은 크기를 따라간다. 한글은 로마자만큼 못 벌린다 */
   --track-1: -0.045em;
   --track-2: -0.035em;
   --track-3: -0.022em;
@@ -49,6 +56,10 @@
 
   /* 판면 왼쪽 밖으로 표시가 나가는 거리 */
   --hang: 0.875rem;
+
+  /* 손이 닿을 때 요소가 움직이는 거리.
+     3px 과 4px 이 섞여 있던 네 자리를 한 값으로 모은다 */
+  --slide: 3px;
 
   /* 손이 닿을 때는 즉답, 뗄 때는 여운 */
   --in: 0.1s;
@@ -97,7 +108,7 @@ body {
 }
 
 ::selection {
-  background: var(--accent-soft);
+  background: var(--accent-14);
 }
 
 :focus-visible {
@@ -109,7 +120,7 @@ body {
 a {
   color: inherit;
   text-decoration: none;
-  transition: color 0.15s ease;
+  transition: color var(--out) ease;
 }
 
 .prose a,
@@ -119,13 +130,14 @@ a {
   text-underline-offset: 0.2em;
   text-decoration-thickness: 1px;
   text-decoration-color: color-mix(in srgb, var(--accent-ink) 40%, transparent);
-  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+  transition: color var(--out) ease, text-decoration-color var(--out) ease;
 }
 
 .prose a:hover,
 .link:hover {
   color: var(--accent-strong);
   text-decoration-color: currentColor;
+  transition-duration: var(--in);
 }
 
 .mono {
@@ -282,7 +294,7 @@ a {
   width: 5px;
   height: 5px;
   border-radius: 1.5px;
-  background: var(--accent);
+  background: var(--accent-ink);
 }
 
 /* 고정폭 스택에 한글이 없어서 .mono 로 감싼 한글은 시스템 글꼴로 떨어진다.
@@ -300,11 +312,11 @@ a {
   position: relative;
   display: flex;
   align-items: baseline;
-  gap: 0.875rem;
-  padding: 0.5rem 0.875rem;
-  margin: 0 -0.875rem;
+  gap: var(--hang);
+  padding: 0.5rem var(--hang);
+  margin: 0 calc(var(--hang) * -1);
   border-radius: 6px;
-  transition: background 0.15s ease;
+  transition: background var(--out) ease;
 }
 
 .row::before {
@@ -314,17 +326,19 @@ a {
   top: 50%;
   width: 2px;
   height: 0;
-  background: var(--accent);
+  background: var(--accent-ink);
   transform: translateY(-50%);
-  transition: height 0.18s cubic-bezier(0.2, 0.7, 0.3, 1);
+  transition: height var(--out) var(--ease);
 }
 
 .row:hover {
-  background: var(--surface);
+  background: var(--accent-08);
+  transition-duration: var(--in);
 }
 
 .row:hover::before {
   height: 62%;
+  transition-duration: var(--in);
 }
 
 .row .date {
@@ -360,11 +374,12 @@ a {
   background-repeat: repeat-x;
   background-position: left center;
   opacity: 0.75;
-  transition: opacity 0.18s ease;
+  transition: opacity var(--out) ease;
 }
 
 .row:hover .leader {
   opacity: 1;
+  transition-duration: var(--in);
 }
 
 .row .tags {
@@ -379,13 +394,14 @@ a {
   font-size: 0.8125rem;
   color: var(--accent-ink);
   opacity: 0;
-  transform: translateX(-3px);
-  transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1);
+  transform: translateX(calc(var(--slide) * -1));
+  transition: opacity var(--out) ease, transform var(--out) var(--ease);
 }
 
 .row:hover .arrow {
   opacity: 1;
   transform: none;
+  transition-duration: var(--in);
 }
 
 .tag {
@@ -399,16 +415,17 @@ a {
   opacity: 0.6;
 }
 
-/* 대분류 칩. 값이 전부 로마자라 라벨 층에 그대로 들어간다 */
+/* 대분류 칩. align-self: center 를 뺐다. 12px 칩만 글줄 가운데에 떠 있었다.
+   자간은 마지막 글자 뒤에도 붙으므로 그만큼 되돌려야 오른쪽 끝이 맞는다 */
 .chip {
   font-family: var(--font-mono);
   font-size: var(--t-8);
   letter-spacing: var(--track-en);
+  margin-right: calc(var(--track-en) * -1);
   white-space: nowrap;
   color: var(--ink-3);
   line-height: 1.4;
   flex-shrink: 0;
-  align-self: center;
 }
 
 /* 목록 페이지 공통 헤더 */
@@ -417,9 +434,10 @@ a {
 }
 
 .page-head h1 {
-  font-size: 1.625rem;
+  font-size: var(--t-3);
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--track-3);
+  line-height: 1.25;
   margin: 0 0 0.375rem;
 }
 

@@ -67,14 +67,14 @@ const rows = projects
   .p {
     position: relative;
     display: block;
-    padding: 0.5rem 0.75rem;
-    margin: 0 -0.75rem;
+    padding: 0.5rem var(--hang);
+    margin: 0 calc(var(--hang) * -1);
     border-radius: 6px;
     transition: background var(--out) ease;
   }
 
   .p:hover {
-    background: var(--surface);
+    background: var(--accent-08);
     transition-duration: var(--in);
   }
 
@@ -97,9 +97,10 @@ const rows = projects
     background: var(--line-strong);
   }
 
+  /* 5px 짜리 좁은 도형이라 원액. 둘레는 넓으니 14퍼센트 */
   .p.ongoing .dot {
-    background: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-soft);
+    background: var(--accent-ink);
+    box-shadow: 0 0 0 3px var(--accent-14);
   }
 
   .name {
@@ -132,7 +133,7 @@ const rows = projects
     font-size: 0.8125rem;
     color: var(--accent-ink);
     opacity: 0;
-    transform: translateX(-4px);
+    transform: translateX(calc(var(--slide) * -1));
     transition: opacity var(--out) ease, transform var(--out) var(--ease);
   }
 

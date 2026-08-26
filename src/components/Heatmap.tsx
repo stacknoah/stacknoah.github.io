@@ -38,11 +38,11 @@ const styles = `
    칸 크기를 고정하지 않고 폭을 따라가게 해서 미디어 쿼리도 가로 스크롤도 없다 */
 .heatmap {
   position: relative;
-  max-width: 42rem;
-  /* 라벨 줄 점선 간격을 격자 열 간격에서 뽑기 위한 기준.
-     cqw 를 못 쓰는 브라우저에서는 아래 값이 그대로 쓰인다 */
   --px: 24px;
-  --dot: 1.5px;
+  --dot: 1.4px;
+  /* 마크 지름과 둘레 테 지름. 편수가 늘면 이 둘만 커진다 */
+  --core: 28%;
+  --halo: 52%;
 }
 
 /* 격자 열 간격을 실제 폭에서 계산한다. 분기점이 없으니 어긋날 구간도 없다 */
@@ -50,7 +50,8 @@ const styles = `
   .heatmap {
     container-type: inline-size;
     --px: calc(100cqw / var(--cols));
-    --dot: calc(var(--px) * 0.075);
+    /* 고리가 둘리니 안쪽 점은 조금 작게. 바닥이 없으면 좁은 화면에서 격자가 사라진다 */
+    --dot: max(1px, calc(var(--px) * 0.06));
   }
 }
 
@@ -67,7 +68,7 @@ const styles = `
   flex: 1 1 auto;
   min-width: 1.5rem;
   align-self: center;
-  margin: 0 0.875rem;
+  margin: 0 0.875rem 0 calc(0.875rem - var(--track-en));
   height: 2px;
   background-image: radial-gradient(
     circle at right center,
@@ -136,27 +137,45 @@ const styles = `
 
 .heatmap .mark {
   display: grid;
-  place-items: center;
+  grid-template: 1fr / 1fr;
 }
 
-/* 78퍼센트다. 62퍼센트로 두면 다 채워졌을 때 사이가 벌어져
-   덩어리로 안 뭉치고 흩어진 점점으로 보인다.
-   하루 한 편도 제 무게를 갖게 두 번째 단계에서 시작한다 */
-.heatmap .mark::before {
+/* 둘을 같은 칸에 겹쳐 놓는다 */
+.heatmap .mark::before,
+.heatmap .mark::after {
   content: '';
-  width: 78%;
+  grid-area: 1 / 1;
+  place-self: center;
   aspect-ratio: 1;
-  border-radius: 24%;
-  background: var(--heat-2);
+  border-radius: 50%;
   transition: transform var(--out) var(--ease), background var(--out) ease;
 }
 
-.heatmap .lv2::before { background: var(--heat-3); }
-.heatmap .lv3::before { background: var(--heat-4); }
+/* 둘레 테. 무게가 빈 날 점과 같아서 마크가 격자에서 자란 것으로 앉는다 */
+.heatmap .mark::before {
+  width: max(6px, var(--halo));
+  background: var(--accent-24);
+}
+
+/* 색을 나르는 건 이것뿐. 칸 넓이의 6.2퍼센트라 원액을 써도 안 무겁다 */
+.heatmap .mark::after {
+  width: max(3px, var(--core));
+  background: var(--accent-ink);
+}
+
+/* 편수는 색이 아니라 지름으로 갈린다. 흑백으로 찍어도 같게 읽힌다 */
+.heatmap .lv2 { --core: 36%; --halo: 62%; }
+.heatmap .lv3 { --core: 44%; --halo: 72%; }
 
 .heatmap .mark:hover::before,
 .heatmap .mark:focus-visible::before {
-  transform: scale(1.14);
+  transform: scale(1.16);
+  transition-duration: var(--in);
+}
+
+.heatmap .mark:hover::after,
+.heatmap .mark:focus-visible::after {
+  transform: scale(1.1);
   background: var(--accent-strong);
   transition-duration: var(--in);
 }
@@ -165,8 +184,7 @@ const styles = `
   outline: none;
 }
 
-/* 오늘 칸. 오른쪽 끝이 지금이라는 것만 알린다.
-   오늘 기록이 있으면 이 칸은 마크가 대신한다 */
+/* 오늘. 도형을 새로 만들지 않고 그 날 바탕 점만 짙게 한다 */
 .heatmap .now {
   display: grid;
   place-items: center;
@@ -174,10 +192,10 @@ const styles = `
 
 .heatmap .now::before {
   content: '';
-  width: 78%;
+  width: calc(var(--dot) * 2 + 1px);
   aspect-ratio: 1;
-  border-radius: 24%;
-  box-shadow: inset 0 0 0 1.5px var(--accent-mid);
+  border-radius: 50%;
+  background: var(--ink-2);
 }
 
 /* 오늘 이후는 아직 오지 않은 날이라 점도 지운다 */
@@ -195,8 +213,8 @@ const styles = `
   transform: translate(-50%, 2px);
   width: max-content;
   max-width: 15rem;
-  background: var(--ink);
-  color: #fff;
+  background: var(--bg);
+  color: var(--ink);
   border-radius: 7px;
   padding: 0.4rem 0.6rem;
   font-size: var(--t-8);
@@ -205,20 +223,22 @@ const styles = `
   text-align: left;
   opacity: 0;
   pointer-events: none;
-  box-shadow: 0 6px 20px rgba(0, 88, 85, 0.18);
+  box-shadow: 0 0 0 1px var(--line-strong), 0 2px 12px rgba(26, 26, 25, 0.06);
   transition: opacity var(--out) ease, transform var(--out) var(--ease);
 }
 
 .heatmap .tip b {
   font-family: var(--font-mono);
   font-weight: 500;
-  opacity: 0.65;
+  opacity: 1;
+  color: var(--ink-3);
   margin-right: 0.3rem;
 }
 
 .heatmap .tip em {
   font-style: normal;
-  opacity: 0.65;
+  opacity: 1;
+  color: var(--ink-3);
   margin-left: 0.3rem;
 }
 
@@ -276,6 +296,7 @@ const styles = `
 
 @media (prefers-reduced-motion: reduce) {
   .heatmap .mark::before,
+  .heatmap .mark::after,
   .heatmap .tip {
     transition: none;
   }

@@ -32,7 +32,7 @@ const label = categoryLabel(category);
 <Base title={title} description={description} narrow>
   <article>
     <header>
-      <a href={backHref} class="back mono">← {backLabel}</a>
+      <a href={backHref} class="back mono">{backLabel}</a>
       <h1>{title}</h1>
       <div class="meta mono">
         <span>{korDate(date)}</span>
@@ -53,8 +53,17 @@ const label = categoryLabel(category);
   }
 
   .back {
+    position: relative;
     font-size: 0.75rem;
     color: var(--ink-3);
+  }
+
+  /* 글줄 밖으로 뺀다. 이 글자와 아래 제목의 왼쪽 끝이 같아진다 */
+  .back::before {
+    content: '←';
+    position: absolute;
+    left: calc(var(--hang) * -1);
+    top: 0;
   }
 
   .back:hover {
@@ -62,11 +71,11 @@ const label = categoryLabel(category);
   }
 
   h1 {
-    font-size: 1.875rem;
+    font-size: var(--t-2);
     font-weight: 700;
-    line-height: 1.3;
+    line-height: 1.25;
     margin: 1rem 0 0.75rem;
-    letter-spacing: -0.02em;
+    letter-spacing: var(--track-2);
   }
 
   .meta {

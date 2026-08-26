@@ -227,7 +227,7 @@ const groups = roadmap.map((g) => ({
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    background: var(--accent);
+    background: var(--accent-ink);
     align-self: flex-start;
     margin-top: 0.45rem;
   }
@@ -239,9 +239,9 @@ const groups = roadmap.map((g) => ({
     bottom: -1px;
     height: 2px;
     width: 0;
-    background: var(--accent);
+    background: var(--accent-ink);
     border-radius: 1px;
-    transition: transform 0.28s cubic-bezier(0.2, 0.7, 0.3, 1), width 0.28s cubic-bezier(0.2, 0.7, 0.3, 1);
+    transition: transform 0.28s var(--ease), width 0.28s var(--ease);
   }
 
   /* 자바스크립트가 없으면 전부 펴진 채로 보임 */
@@ -286,7 +286,7 @@ const groups = roadmap.map((g) => ({
   }
 
   .items {
-    max-height: 13.5rem;
+    max-height: 14rem;
     overflow-y: auto;
     overscroll-behavior-y: contain;
     scrollbar-width: thin;
@@ -329,7 +329,7 @@ const groups = roadmap.map((g) => ({
   }
   .rail:hover::-webkit-scrollbar-thumb,
   .items:hover::-webkit-scrollbar-thumb {
-    background: var(--accent);
+    background: var(--accent-ink);
   }
 
   ul {
@@ -340,7 +340,7 @@ const groups = roadmap.map((g) => ({
 
   li {
     font-size: var(--t-5);
-    line-height: 1.55;
+    line-height: 1.6;
     letter-spacing: var(--track-4);
   }
 
@@ -362,7 +362,7 @@ const groups = roadmap.map((g) => ({
   }
 
   li a:hover {
-    background: var(--surface);
+    background: var(--accent-08);
     color: var(--accent-ink);
     transition-duration: var(--in);
   }
@@ -399,7 +399,7 @@ const groups = roadmap.map((g) => ({
     font-size: 0.75rem;
     color: var(--accent-ink);
     opacity: 0;
-    transform: translateX(-3px);
+    transform: translateX(calc(var(--slide) * -1));
     transition: opacity var(--out) ease, transform var(--out) var(--ease);
   }
 
