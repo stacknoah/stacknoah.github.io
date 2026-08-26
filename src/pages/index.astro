@@ -11,8 +11,18 @@ const notes = await getCollection('notes');
 const articles = await getCollection('articles');
 
 const entries: HeatEntry[] = [
-  ...notes.map((e) => ({ date: ymd(e.data.date), title: e.data.title, kind: '노트' as const })),
-  ...articles.map((e) => ({ date: ymd(e.data.date), title: e.data.title, kind: '글' as const })),
+  ...notes.map((e) => ({
+    date: ymd(e.data.date),
+    title: e.data.title,
+    kind: '노트' as const,
+    href: `/notes/${e.id}`,
+  })),
+  ...articles.map((e) => ({
+    date: ymd(e.data.date),
+    title: e.data.title,
+    kind: '글' as const,
+    href: `/articles/${e.id}`,
+  })),
 ];
 ---
 
@@ -23,8 +33,7 @@ const entries: HeatEntry[] = [
 
   <section class="block split rise rise-2">
     <div class="col activity">
-      <p class="section-label">activity</p>
-      <Heatmap entries={entries} months={6} client:only="react" />
+      <Heatmap entries={entries} months={6} />
     </div>
     <div class="col">
       <p class="section-label">
@@ -91,11 +100,6 @@ const entries: HeatEntry[] = [
     color: var(--accent-ink);
     transform: translateX(3px);
     transition-duration: var(--in);
-  }
-
-  /* client:only 히트맵이 뜨기 전 레이아웃 흔들림 방지 */
-  .activity {
-    min-height: 12rem;
   }
 
   @media (max-width: 960px) {

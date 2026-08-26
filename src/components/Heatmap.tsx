@@ -1,328 +1,423 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 
 export interface HeatEntry {
   date: string; // YYYY-MM-DD
   title: string;
   kind: '노트' | '글' | '프로젝트';
+  href?: string;
 }
 
 interface Props {
   entries: HeatEntry[];
-  /** 몇 개월치를 보여줄지. 기본 12 */
+  /** 몇 개월치를 보여줄지. 기본 6 */
   months?: number;
 }
 
-const DAY_LABELS = ['', '월', '', '수', '', '금', ''];
+const DAY = 86400000;
 
-function ymd(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
+/** CSS 사용자 지정 속성을 style 에 넣기 위한 우회 */
+const vars = (o: Record<string, number | string>) => o as CSSProperties;
+
+function parseYmd(s: string): Date {
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(y, m - 1, d);
 }
 
-function level(count: number): number {
-  if (count <= 0) return 0;
-  if (count >= 4) return 4;
-  return count;
+/** 서머타임이 있는 지역에서도 어긋나지 않게 반올림 */
+function daysBetween(a: Date, b: Date): number {
+  return Math.round((b.getTime() - a.getTime()) / DAY);
 }
 
-export default function Heatmap({ entries, months = 12 }: Props) {
-  // 기간이 짧을수록 칸을 키워 같은 폭을 채움
-  const CELL = months <= 4 ? 18 : months <= 7 ? 16 : 14;
-  const GAP = months <= 8 ? 4 : 3;
-  const GUTTER = 28;
-  const [tip, setTip] = useState<{ x: number; y: number; date: string; items: HeatEntry[] } | null>(null);
+function mmdd(s: string): string {
+  return s.slice(5).replace('-', '.');
+}
 
-  const { weeks, monthTicks, byDate, stats } = useMemo(() => {
-    const byDate = new Map<string, HeatEntry[]>();
-    for (const e of entries) {
-      const list = byDate.get(e.date) ?? [];
-      list.push(e);
-      byDate.set(e.date, list);
-    }
+const styles = `
+/* 빈 날을 사각형으로 그리면 175개가 실제 기록 5개와 같은 무게로 싸운다.
+   빈 날은 점으로 낮춰서 배경 하나로 그리고, 태그로 남는 건 글 쓴 날뿐이다.
+   칸 크기를 고정하지 않고 폭을 따라가게 해서 미디어 쿼리도 가로 스크롤도 없다 */
+.heatmap {
+  position: relative;
+  max-width: 42rem;
+  /* 라벨 줄 점선 간격을 격자 열 간격에서 뽑기 위한 기준.
+     cqw 를 못 쓰는 브라우저에서는 아래 값이 그대로 쓰인다 */
+  --px: 24px;
+  --dot: 1.5px;
+}
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const start = new Date(today);
-    start.setMonth(start.getMonth() - months);
-    start.setDate(start.getDate() + 1);
-    start.setDate(start.getDate() - start.getDay()); // 시작 주의 일요일로
+/* 격자 열 간격을 실제 폭에서 계산한다. 분기점이 없으니 어긋날 구간도 없다 */
+@supports (width: 1cqw) {
+  .heatmap {
+    container-type: inline-size;
+    --px: calc(100cqw / var(--cols));
+    --dot: calc(var(--px) * 0.075);
+  }
+}
 
-    const weeks: { date: Date; key: string }[][] = [];
-    const cursor = new Date(start);
-    while (cursor <= today) {
-      const week: { date: Date; key: string }[] = [];
-      for (let i = 0; i < 7 && cursor <= today; i++) {
-        week.push({ date: new Date(cursor), key: ymd(cursor) });
-        cursor.setDate(cursor.getDate() + 1);
-      }
-      weeks.push(week);
-    }
+/* 라벨 줄. 왼쪽 단어와 오른쪽 값 하나로 끝나는 완결된 줄이고,
+   아래 격자에 가로 폭을 지정해준다 */
+.heatmap .section-label {
+  margin-bottom: 1.25rem;
+}
 
-    const monthTicks: { col: number; label: string }[] = [];
-    let prevMonth = -1;
-    weeks.forEach((week, col) => {
-      const m = week[0].date.getMonth();
-      if (m !== prevMonth) {
-        if (week[0].date.getDate() <= 14 || col === 0) {
-          monthTicks.push({ col, label: `${m + 1}월` });
-        }
-        prevMonth = m;
-      }
+/* 점 간격이 열 간격의 4분의 1이라 네 번째 점마다 아래 열 중앙에 떨어진다.
+   오른쪽 끝을 기준으로 깔아야 위상이 격자와 맞는다.
+   열 간격 그대로 찍으면 22px 간격이 되어 이어주는 선으로 안 읽힌다 */
+.heatmap .lead {
+  flex: 1 1 auto;
+  min-width: 1.5rem;
+  align-self: center;
+  margin: 0 0.875rem;
+  height: 2px;
+  background-image: radial-gradient(
+    circle at right center,
+    var(--line-strong) 1px,
+    transparent 1.5px
+  );
+  background-size: calc(var(--px) / 4) 2px;
+  background-position: right center;
+  background-repeat: repeat-x;
+  opacity: 0.75;
+}
+
+.heatmap .tally {
+  display: inline-flex;
+  align-items: baseline;
+  flex-shrink: 0;
+}
+
+/* 숫자와 단위를 같은 크기로 둬서 5편이 한 낱말로 붙는다.
+   크기를 벌리면 한글 한 음절이 숫자 발치에 붙은 조각으로 보인다.
+   차이는 색으로만 낸다 */
+.heatmap .tally b {
+  font-family: var(--font-mono);
+  font-size: var(--t-7);
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 고정폭 스택에 한글이 없다. 여기서 다시 잡지 않으면
+   .section-label 의 고정폭을 물려받아 시스템 글꼴로 떨어진다 */
+.heatmap .tally i {
+  font-family: var(--font-sans);
+  font-style: normal;
+  font-size: var(--t-7);
+  font-weight: 500;
+  letter-spacing: var(--track-ko);
+  color: var(--ink-3);
+  margin-left: -0.02em;
+}
+
+/* 칸이 폭을 따라간다. aspect-ratio 덕에 폭이 얼마든 칸이 정사각형이다.
+   요일 라벨을 없애서 라벨 줄, 격자, 월 눈금이 같은 세로선에서 시작한다 */
+.heatmap .field {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--cols) / 7;
+  background-image: radial-gradient(
+    circle at center,
+    var(--line-strong) var(--dot),
+    transparent calc(var(--dot) + 0.5px)
+  );
+  background-size: calc(100% / var(--cols)) calc(100% / 7);
+}
+
+.heatmap .mark,
+.heatmap .now,
+.heatmap .ahead {
+  position: absolute;
+  left: calc(var(--c) * (100% / var(--cols)));
+  top: calc(var(--r) * (100% / 7));
+  width: calc(100% / var(--cols));
+  height: calc(100% / 7);
+}
+
+.heatmap .mark {
+  display: grid;
+  place-items: center;
+}
+
+/* 78퍼센트다. 62퍼센트로 두면 다 채워졌을 때 사이가 벌어져
+   덩어리로 안 뭉치고 흩어진 점점으로 보인다.
+   하루 한 편도 제 무게를 갖게 두 번째 단계에서 시작한다 */
+.heatmap .mark::before {
+  content: '';
+  width: 78%;
+  aspect-ratio: 1;
+  border-radius: 24%;
+  background: var(--heat-2);
+  transition: transform var(--out) var(--ease), background var(--out) ease;
+}
+
+.heatmap .lv2::before { background: var(--heat-3); }
+.heatmap .lv3::before { background: var(--heat-4); }
+
+.heatmap .mark:hover::before,
+.heatmap .mark:focus-visible::before {
+  transform: scale(1.14);
+  background: var(--accent-strong);
+  transition-duration: var(--in);
+}
+
+.heatmap .mark:focus-visible {
+  outline: none;
+}
+
+/* 오늘 칸. 오른쪽 끝이 지금이라는 것만 알린다.
+   오늘 기록이 있으면 이 칸은 마크가 대신한다 */
+.heatmap .now {
+  display: grid;
+  place-items: center;
+}
+
+.heatmap .now::before {
+  content: '';
+  width: 78%;
+  aspect-ratio: 1;
+  border-radius: 24%;
+  box-shadow: inset 0 0 0 1.5px var(--accent-mid);
+}
+
+/* 오늘 이후는 아직 오지 않은 날이라 점도 지운다 */
+.heatmap .ahead {
+  height: calc(var(--n) * (100% / 7));
+  background: var(--bg);
+}
+
+/* 제목은 손이 닿을 때만. 쉬는 화면에 글자를 늘리지 않는다 */
+.heatmap .tip {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translate(-50%, 2px);
+  width: max-content;
+  max-width: 15rem;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 7px;
+  padding: 0.4rem 0.6rem;
+  font-size: var(--t-8);
+  line-height: 1.5;
+  word-break: keep-all;
+  text-align: left;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 6px 20px rgba(0, 88, 85, 0.18);
+  transition: opacity var(--out) ease, transform var(--out) var(--ease);
+}
+
+.heatmap .tip b {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  opacity: 0.65;
+  margin-right: 0.3rem;
+}
+
+.heatmap .tip em {
+  font-style: normal;
+  opacity: 0.65;
+  margin-left: 0.3rem;
+}
+
+.heatmap .mark:hover .tip,
+.heatmap .mark:focus-visible .tip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* 양 끝 칸은 말풍선이 칸 밖으로 나가서 한쪽에 붙인다 */
+.heatmap .mark.end .tip {
+  left: auto;
+  right: 0;
+  transform: translate(0, 2px);
+}
+
+.heatmap .mark.end:hover .tip,
+.heatmap .mark.end:focus-visible .tip {
+  transform: translate(0, 0);
+}
+
+.heatmap .mark.start .tip {
+  left: 0;
+  transform: translate(0, 2px);
+}
+
+.heatmap .mark.start:hover .tip,
+.heatmap .mark.start:focus-visible .tip {
+  transform: translate(0, 0);
+}
+
+/* 월 눈금. 그 달이 시작하는 열에 왼쪽을 맞춘다 */
+.heatmap .months {
+  position: relative;
+  height: 1rem;
+  margin-top: 0.625rem;
+}
+
+.heatmap .months span {
+  position: absolute;
+  left: calc(var(--c) * (100% / var(--cols)));
+  font-family: var(--font-sans);
+  font-size: var(--t-8);
+  font-weight: 500;
+  letter-spacing: var(--track-ko);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+/* 오른쪽 끝에 붙는 달은 글자가 격자 밖으로 나가지 않게 오른쪽을 맞춘다 */
+.heatmap .months span.tail {
+  left: auto;
+  right: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heatmap .mark::before,
+  .heatmap .tip {
+    transition: none;
+  }
+}
+`;
+
+export default function Heatmap({ entries, months = 6 }: Props) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // 창의 시작을 달 경계에 맞춘다. 6개월 전의 그 날이 아니라
+  // months 개월 전 달 1일을 품은 일요일이다. 안 맞추면 첫 열이 토막 나서
+  // 월 눈금만 한 칸 들여쓰기 된 것처럼 보인다
+  const firstOfMonth = new Date(today.getFullYear(), today.getMonth() - (months - 1), 1);
+  const start = new Date(firstOfMonth);
+  start.setDate(start.getDate() - start.getDay());
+
+  const span = daysBetween(start, today); // 시작 일요일부터 오늘까지 며칠
+  const cols = Math.floor(span / 7) + 1;
+
+  // 날짜별로 묶는다. 창 밖 글은 격자에 안 그리고 누적 편수에만 들어간다
+  const byDate = new Map<string, HeatEntry[]>();
+  for (const e of entries) {
+    const list = byDate.get(e.date);
+    if (list) list.push(e);
+    else byDate.set(e.date, [e]);
+  }
+
+  const marks: {
+    key: string;
+    col: number;
+    row: number;
+    level: number;
+    items: HeatEntry[];
+  }[] = [];
+
+  for (const [date, items] of byDate) {
+    const idx = daysBetween(start, parseYmd(date));
+    if (idx < 0 || idx > span) continue;
+    marks.push({
+      key: date,
+      col: Math.floor(idx / 7),
+      row: idx % 7,
+      level: Math.min(items.length, 3),
+      items,
     });
+  }
+  marks.sort((a, b) => (a.key < b.key ? -1 : 1));
 
-    // 겹치지 않는 값으로. 전체 누적은 계속 늘고, 30일은 지금 속도, 연속은 습관
-    const total = entries.length;
+  const total = entries.length;
 
+  // 오늘 이후는 아직 오지 않은 날이라 점도 지운다
+  const todayRow = span % 7;
+  const aheadCount = 6 - todayRow;
+  const todayCol = Math.floor(span / 7);
+  const todayDone = byDate.has(
+    `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(
+      today.getDate(),
+    ).padStart(2, '0')}`,
+  );
 
-    let streak = 0;
-    const probe = new Date(today);
-    const todayDone = byDate.has(ymd(today));
-    if (!todayDone) probe.setDate(probe.getDate() - 1);
-    while (byDate.has(ymd(probe))) {
-      streak++;
-      probe.setDate(probe.getDate() - 1);
+  // 월 눈금. 그 달이 시작하는 주의 열에 왼쪽을 맞춘다
+  const monthTicks: { col: number; label: string }[] = [];
+  {
+    const cursor = new Date(firstOfMonth);
+    for (let i = 0; i < months; i++) {
+      const idx = daysBetween(start, cursor);
+      if (idx >= 0 && idx <= span) {
+        monthTicks.push({ col: Math.floor(idx / 7), label: `${cursor.getMonth() + 1}월` });
+      }
+      cursor.setMonth(cursor.getMonth() + 1);
     }
+  }
 
-
-    return { weeks, monthTicks, byDate, stats: { total, streak, todayDone } };
-  }, [entries, months]);
-
-  const gridWidth = weeks.length * (CELL + GAP) - GAP;
-
-  // 좁은 화면에서는 최근 기록이 있는 오른쪽 끝부터 보이게
-  const scrollRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (el) el.scrollLeft = el.scrollWidth;
-  }, []);
+  // 말풍선이 칸 밖으로 나가는 쪽을 서버에서 정한다. React 상태가 필요 없다
+  const anchor = (col: number) => (col >= cols - 6 ? ' end' : col <= 5 ? ' start' : '');
 
   return (
-    <div className="heatmap">
-      <div className="stats">
-        <span className="stat">
-          <span className="lab">전체</span>
-          <span className="num">{stats.total}</span>
-          <span className="unit">편</span>
-        </span>
-        <span className="stat">
-          <span className="lab">연속</span>
-          <span className="num">{stats.streak}</span>
-          <span className="unit">일</span>
-          {stats.todayDone && <i className="live" aria-label="오늘도 기록함" />}
-        </span>
+    <div className="heatmap" style={vars({ '--cols': cols })}>
+      <p className="section-label">
+        activity
+        {total > 0 && (
+          <>
+            <span className="lead" aria-hidden="true" />
+            <span className="tally">
+              <b>{total}</b>
+              <i>편</i>
+            </span>
+          </>
+        )}
+      </p>
+
+      <div className="field">
+        {marks.map((m) => {
+          const label = `${m.key}, ${m.items.length}편`;
+          const cls = `mark lv${m.level}${anchor(m.col)}`;
+          const style = vars({ '--c': m.col, '--r': m.row });
+          const tip = (
+            <span className="tip" aria-hidden="true">
+              <b>{mmdd(m.key)}</b>
+              {m.items[0].title}
+              {m.items.length > 1 && <em>외 {m.items.length - 1}편</em>}
+            </span>
+          );
+          const href = m.items[0].href;
+          return href ? (
+            <a key={m.key} className={cls} style={style} href={href} aria-label={label}>
+              {tip}
+            </a>
+          ) : (
+            <span key={m.key} className={cls} style={style} role="img" aria-label={label}>
+              {tip}
+            </span>
+          );
+        })}
+
+        {!todayDone && (
+          <span className="now" style={vars({ '--c': todayCol, '--r': todayRow })} aria-hidden="true" />
+        )}
+
+        {aheadCount > 0 && (
+          <span
+            className="ahead"
+            style={vars({ '--c': todayCol, '--r': todayRow + 1, '--n': aheadCount })}
+            aria-hidden="true"
+          />
+        )}
       </div>
 
-      <div className="scroll" ref={scrollRef}>
-        <div style={{ width: gridWidth + GUTTER }}>
-          <div className="month-row" style={{ paddingLeft: GUTTER }}>
-            {monthTicks.map((m, i) => {
-              const next = monthTicks[i + 1];
-              const span = (next ? next.col : weeks.length) - m.col;
-              return (
-                <span key={m.col} style={{ width: span * (CELL + GAP) }}>
-                  {m.label}
-                </span>
-              );
-            })}
-          </div>
-
-          <div className="grid-wrap">
-            <div className="day-col mono">
-              {DAY_LABELS.map((label, i) => (
-                <span key={i} style={{ height: CELL, lineHeight: `${CELL}px` }}>
-                  {label}
-                </span>
-              ))}
-            </div>
-
-            <div
-              className="grid"
-              role="img"
-              aria-label={`최근 ${months}개월 기록 히트맵, 기록 ${stats.total}개`}
-              onMouseLeave={() => setTip(null)}
-            >
-              {weeks.map((week, wi) => (
-                <div className="week" key={wi}>
-                  {week.map((cell) => {
-                    const items = byDate.get(cell.key) ?? [];
-                    return (
-                      <div
-                        key={cell.key}
-                        className={`cell heat-${level(items.length)}`}
-                        onMouseEnter={() =>
-                          setTip({
-                            x: GUTTER + wi * (CELL + GAP),
-                            y: cell.date.getDay() * (CELL + GAP),
-                            date: cell.key,
-                            items,
-                          })
-                        }
-                      />
-                    );
-                  })}
-                </div>
-              ))}
-
-              {tip && (
-                <div
-                  className="tooltip"
-                  style={{
-                    left: Math.min(tip.x, gridWidth - 150),
-                    top: tip.y + CELL + 8,
-                  }}
-                >
-                  <div className="tip-date mono">{tip.date}</div>
-                  {tip.items.length === 0 ? (
-                    <div className="tip-empty">기록 없음</div>
-                  ) : (
-                    tip.items.slice(0, 4).map((item, i) => (
-                      <div key={i} className="tip-item">
-                        <span className="tip-kind">{item.kind}</span> {item.title}
-                      </div>
-                    ))
-                  )}
-                  {tip.items.length > 4 && (
-                    <div className="tip-empty">외 {tip.items.length - 4}개</div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="legend">
-            <span>적게</span>
-            {[0, 1, 2, 3, 4].map((l) => (
-              <span key={l} className={`cell heat-${l}`} />
-            ))}
-            <span>많이</span>
-          </div>
-        </div>
+      <div className="months" aria-hidden="true">
+        {monthTicks.map((t) => (
+          <span
+            key={t.col}
+            className={t.col > cols - 3 ? 'tail' : undefined}
+            style={vars({ '--c': t.col })}
+          >
+            {t.label}
+          </span>
+        ))}
       </div>
 
-      <style>{`
-        .heatmap { position: relative; }
-        /* 라벨을 앞에 두고 한 줄로. 숫자 아래 캡션을 달면 활자가 겉돈다 */
-        .heatmap .stats {
-          display: flex;
-          flex-wrap: wrap;
-          align-items: baseline;
-          gap: 0.5rem 2.5rem;
-          margin-bottom: 2rem;
-        }
-        .heatmap .stat {
-          display: inline-flex;
-          align-items: baseline;
-          gap: 0.4rem;
-        }
-        .heatmap .lab {
-          font-size: var(--t-7);
-          font-weight: 500;
-          letter-spacing: var(--track-ko);
-          color: var(--ink-3);
-        }
-        .heatmap .num {
-          font-size: var(--t-2);
-          font-weight: 500;
-          line-height: 1;
-          letter-spacing: var(--track-2);
-          color: var(--ink);
-          font-variant-numeric: lining-nums proportional-nums;
-        }
-        .heatmap .unit {
-          font-size: var(--t-6);
-          font-weight: 500;
-          color: var(--ink-3);
-          margin-left: -0.15rem;
-        }
-        /* 오늘도 기록했을 때만 켜지는 점 */
-        .heatmap .live {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          background: var(--accent);
-          align-self: center;
-          margin-left: 0.1rem;
-        }
-        .heatmap .scroll { overflow-x: auto; padding-bottom: 4px; }
-        .heatmap .month-row {
-          display: flex;
-          font-size: 0.625rem;
-          color: var(--ink-3);
-          margin-bottom: 4px;
-        }
-        .heatmap .month-row span { display: inline-block; }
-        .heatmap .grid-wrap { display: flex; }
-        .heatmap .day-col {
-          display: flex;
-          flex-direction: column;
-          gap: ${GAP}px;
-          width: 28px;
-          font-size: 0.625rem;
-          color: var(--ink-3);
-        }
-        .heatmap .grid {
-          position: relative;
-          display: flex;
-          gap: ${GAP}px;
-        }
-        .heatmap .week {
-          display: flex;
-          flex-direction: column;
-          gap: ${GAP}px;
-        }
-        .heatmap .cell {
-          width: ${CELL}px;
-          height: ${CELL}px;
-          border-radius: 2.5px;
-          flex-shrink: 0;
-        }
-        .heatmap .grid .cell:hover {
-          outline: 1.5px solid var(--accent);
-          outline-offset: 1px;
-        }
-        .heatmap .heat-0 { background: var(--heat-0); }
-        .heatmap .heat-1 { background: var(--heat-1); }
-        .heatmap .heat-2 { background: var(--heat-2); }
-        .heatmap .heat-3 { background: var(--heat-3); }
-        .heatmap .heat-4 { background: var(--heat-4); }
-        .heatmap .tooltip {
-          position: absolute;
-          z-index: 10;
-          background: var(--ink);
-          color: #fff;
-          border-radius: 8px;
-          padding: 0.5rem 0.75rem;
-          font-size: 0.75rem;
-          line-height: 1.5;
-          width: max-content;
-          max-width: 220px;
-          pointer-events: none;
-          box-shadow: 0 6px 20px rgba(0, 88, 85, 0.22);
-          animation: tip-in 0.12s ease;
-        }
-        @keyframes tip-in {
-          from {
-            opacity: 0;
-            transform: translateY(2px);
-          }
-        }
-        .heatmap .tip-date { opacity: 0.7; font-size: 0.6875rem; }
-        .heatmap .tip-kind { opacity: 0.7; font-size: 0.6875rem; margin-right: 2px; }
-        .heatmap .tip-empty { opacity: 0.7; }
-        .heatmap .legend {
-          display: flex;
-          align-items: center;
-          gap: ${GAP}px;
-          justify-content: flex-end;
-          margin-top: 8px;
-          font-size: 0.625rem;
-          color: var(--ink-3);
-        }
-        .heatmap .legend span:first-child { margin-right: 4px; }
-        .heatmap .legend span:last-child { margin-left: 4px; }
-      `}</style>
+      <style>{styles}</style>
     </div>
   );
 }
