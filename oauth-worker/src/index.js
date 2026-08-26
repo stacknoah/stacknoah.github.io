@@ -15,7 +15,7 @@ function handshake(payload) {
   (function () {
     function receive(e) {
       window.opener.postMessage(
-        'authorization:github:${payload.error ? 'error' : 'success'}:${JSON.stringify(payload).replace(/</g, '\\\\u003c')}',
+        'authorization:github:${payload.token ? 'success' : 'error'}:${JSON.stringify(payload).replace(/</g, '\\\\u003c')}',
         e.origin
       );
       window.removeEventListener('message', receive, false);
@@ -52,8 +52,8 @@ export default {
       const state = url.searchParams.get('state');
       const cookie = (request.headers.get('Cookie') || '').match(/oauth_state=([^;]+)/);
 
-      if (!code) return handshake({ error: '인가 코드가 없음' });
-      if (!cookie || cookie[1] !== state) return handshake({ error: '상태값이 맞지 않음' });
+      if (!code) return handshake({ message: '인가 코드가 없음' });
+      if (!cookie || cookie[1] !== state) return handshake({ message: '상태값이 맞지 않음' });
 
       const res = await fetch(GITHUB_TOKEN, {
         method: 'POST',
@@ -65,7 +65,8 @@ export default {
         }),
       });
       const data = await res.json();
-      if (!data.access_token) return handshake({ error: data.error_description || '토큰을 받지 못함' });
+      if (!data.access_token)
+        return handshake({ message: data.error_description || '토큰을 받지 못함' });
 
       return handshake({ token: data.access_token, provider: 'github' });
     }

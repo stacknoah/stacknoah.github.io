@@ -122,5 +122,12 @@ npm run write
 | 커스텀 도메인 파일 | `public/CNAME` |
 | Node 버전 | `.node-version` |
 
-관리자 화면의 깃헙 로그인만 별도 중계소가 필요하다. `oauth-worker/README.md` 참고.
-Cloudflare Worker 로 한 번 올려두면 되고 사이트가 어디에 있든 상관없다
+관리자 화면의 깃헙 로그인만 별도 중계소가 필요하다. 절차는 `oauth-worker/README.md`
+
+```bash
+npm run auth:deploy   # 워커 올리기
+npm run auth:id       # Client ID 넣기
+npm run auth:secret   # Client secret 넣기
+```
+
+프로젝트 어디서 실행해도 되고, 사이트가 어디에 있든 상관없다

@@ -10,7 +10,10 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "write": "node scripts/write.mjs"
+    "write": "node scripts/write.mjs",
+    "auth:deploy": "cd oauth-worker && npx wrangler deploy",
+    "auth:id": "cd oauth-worker && npx wrangler secret put GITHUB_CLIENT_ID",
+    "auth:secret": "cd oauth-worker && npx wrangler secret put GITHUB_CLIENT_SECRET"
   },
   "dependencies": {
     "@astrojs/react": "^6.0.4",
