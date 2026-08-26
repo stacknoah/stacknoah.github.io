@@ -51,7 +51,7 @@ const path = Astro.url.pathname;
             <rect x="7" y="13" width="18" height="5" rx="2" fill="var(--accent-mid)"></rect>
             <rect x="4" y="21" width="24" height="5" rx="2" fill="var(--accent-mid)"></rect>
           </svg>
-          stacknoah
+          <span class="wordmark">stacknoah</span>
         </a>
         <div class="menu">
           {
@@ -191,6 +191,24 @@ const path = Astro.url.pathname;
   @media (max-width: 640px) {
     .menu {
       gap: 1rem;
+    }
+  }
+
+  /* 480px 아래에서는 로고 글자와 메뉴 넷과 검색을 한 줄에 못 넣는다.
+     전에는 넘친 채로 오른쪽 여백을 밟고 나갔다.
+     글자를 접고 표식만 남기되 손가락이 닿을 만큼 키운다 */
+  @media (max-width: 480px) {
+    .wordmark {
+      display: none;
+    }
+
+    .logo {
+      padding: 0.25rem 0;
+    }
+
+    .logo svg {
+      width: 19px;
+      height: 19px;
     }
   }
 </style>

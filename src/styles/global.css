@@ -41,7 +41,9 @@
   --w-text: 46rem;
 
   /* 활자 사다리 여덟 단. 위는 넓게 벌리고 아래로 갈수록 좁힌다 */
-  --t-1: clamp(2.25rem, 5vw, 3.5rem);
+  /* 워드마크 한 곳에서만 쓴다. 판면의 3할만 덮으면 제목이 아니라 남은 글자로
+     읽혀서, 폭의 3분의 2를 차지하도록 올렸다 */
+  --t-1: clamp(2.5rem, 9.5vw, 7.5rem);
   --t-2: clamp(1.75rem, 3.4vw, 2.25rem);
   --t-3: 1.5rem;
   --t-4: 1.125rem;
@@ -298,6 +300,28 @@ a {
   height: 5px;
   border-radius: 1.5px;
   background: var(--accent-mid);
+}
+
+/* 라벨과 오른쪽 끝값을 잇는 점선. 구역 라벨 세 줄이 같은 구조를 갖는다.
+   왼쪽에 이름, 가운데에 점선, 오른쪽에 값 하나.
+   히트맵은 격자 열 간격에 맞춘 자기 간격으로 이 줄을 덮어쓴다 */
+.lead {
+  flex: 1 1 auto;
+  min-width: 1.5rem;
+  align-self: center;
+  /* 앞 낱말의 자간이 마지막 글자 뒤에도 붙어서 그만큼 당긴다 */
+  margin: 0 0.875rem 0 calc(0.875rem - var(--track-en));
+  height: 2px;
+  background-image: radial-gradient(circle at right center, var(--line-strong) 1px, transparent 1.5px);
+  background-size: 6px 2px;
+  background-position: right center;
+  background-repeat: repeat-x;
+  opacity: 0.75;
+}
+
+/* 오른쪽에 값이 없는 줄은 점선이 판면 끝까지 간다 */
+.lead:last-child {
+  margin-right: 0;
 }
 
 /* 고정폭 스택에 한글이 없어서 .mono 로 감싼 한글은 시스템 글꼴로 떨어진다.

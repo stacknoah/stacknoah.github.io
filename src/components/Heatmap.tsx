@@ -15,6 +15,9 @@ interface Props {
 
 const DAY = 86400000;
 
+/** 월 눈금. 라벨 줄과 같은 로마자 고정폭으로 맞추려고 한글 대신 영문 세 글자 */
+const MONTH = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 /** CSS 사용자 지정 속성을 style 에 넣기 위한 우회 */
 const vars = (o: Record<string, number | string>) => o as CSSProperties;
 
@@ -280,10 +283,10 @@ const styles = `
 .heatmap .months span {
   position: absolute;
   left: calc(var(--c) * (100% / var(--cols)));
-  font-family: var(--font-sans);
+  font-family: var(--font-mono);
   font-size: var(--t-8);
   font-weight: 500;
-  letter-spacing: var(--track-ko);
+  letter-spacing: var(--track-en);
   color: var(--ink-3);
   white-space: nowrap;
 }
@@ -365,7 +368,7 @@ export default function Heatmap({ entries, months = 6 }: Props) {
     for (let i = 0; i < months; i++) {
       const idx = daysBetween(start, cursor);
       if (idx >= 0 && idx <= span) {
-        monthTicks.push({ col: Math.floor(idx / 7), label: `${cursor.getMonth() + 1}월` });
+        monthTicks.push({ col: Math.floor(idx / 7), label: MONTH[cursor.getMonth()] });
       }
       cursor.setMonth(cursor.getMonth() + 1);
     }

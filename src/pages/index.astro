@@ -38,29 +38,32 @@ const entries: HeatEntry[] = [
     <div class="col">
       <p class="section-label">
         projects
+        <span class="lead" aria-hidden="true"></span>
         <a href="/projects" class="all" aria-label="프로젝트 전부 보기">→</a>
       </p>
-      <Projects limit={3} />
+      <Projects limit={2} />
     </div>
   </section>
 
   <section class="block rise rise-3">
-    <p class="section-label">roadmap</p>
+    <p class="section-label">roadmap<span class="lead" aria-hidden="true"></span></p>
     <Roadmap />
   </section>
 </Base>
 
 <style>
   .hero {
-    margin: 5rem 0 3rem;
+    margin: 3.5rem 0 3rem;
   }
 
+  /* s 의 획은 글자칸 왼쪽 끝에서 0.084em 안쪽에서 시작한다. 작을 때는 안 보이지만
+     이 크기에서는 워드마크만 판면보다 열 픽셀 들어가 보여서 그만큼 되민다 */
   .hero h1 {
     font-size: var(--t-1);
     font-weight: 700;
-    margin: 0;
+    margin: 0 0 0 -0.084em;
     letter-spacing: var(--track-1);
-    line-height: 1.1;
+    line-height: 1;
   }
 
   .cursor {
@@ -86,7 +89,7 @@ const entries: HeatEntry[] = [
     grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
     gap: 4rem;
     align-items: start;
-    margin-bottom: 8rem;
+    margin-bottom: 5rem;
   }
 
   /* 전부 보기로 가는 화살표 */
@@ -107,7 +110,7 @@ const entries: HeatEntry[] = [
     .split {
       grid-template-columns: minmax(0, 1fr);
       gap: 3rem;
-      margin-bottom: 5.5rem;
+      margin-bottom: 4rem;
     }
   }
 
