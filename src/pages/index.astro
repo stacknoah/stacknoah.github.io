@@ -1,0 +1,119 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Heatmap from '../components/Heatmap.tsx';
+import Roadmap from '../components/Roadmap.astro';
+import Projects from '../components/Projects.astro';
+import { ymd } from '../lib/format';
+import type { HeatEntry } from '../components/Heatmap.tsx';
+
+const notes = await getCollection('notes');
+const articles = await getCollection('articles');
+const logs = await getCollection('logs');
+
+const entries: HeatEntry[] = [
+  ...notes.map((e) => ({ date: ymd(e.data.date), title: e.data.title, kind: '노트' as const })),
+  ...articles.map((e) => ({ date: ymd(e.data.date), title: e.data.title, kind: '글' as const })),
+  ...logs.map((e) => ({ date: ymd(e.data.date), title: e.data.title, kind: '프로젝트' as const })),
+];
+---
+
+<Base>
+  <section class="hero rise">
+    <h1 class="mono">stacknoah<span class="cursor">_</span></h1>
+  </section>
+
+  <section class="block split rise rise-2">
+    <div class="col activity">
+      <p class="section-label">activity</p>
+      <Heatmap entries={entries} months={6} client:only="react" />
+    </div>
+    <div class="col">
+      <p class="section-label">
+        projects
+        <a href="/projects" class="all" aria-label="프로젝트 전부 보기">→</a>
+      </p>
+      <Projects limit={3} />
+    </div>
+  </section>
+
+  <section class="block rise rise-3">
+    <p class="section-label">roadmap</p>
+    <Roadmap />
+  </section>
+</Base>
+
+<style>
+  .hero {
+    margin: 5rem 0 3rem;
+  }
+
+  .hero h1 {
+    font-size: var(--t-1);
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: var(--track-1);
+    line-height: 1.1;
+  }
+
+  .cursor {
+    color: var(--accent-mid);
+    animation: blink 1.2s steps(1) infinite;
+  }
+
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
+
+  /* 큰 쉼은 페이지에 한 번뿐. 로드맵 아래는 main 의 padding-bottom 이 받는다 */
+  .block {
+    margin-bottom: 0;
+  }
+
+
+  /* 왼쪽 히트맵, 오른쪽 프로젝트 */
+  .split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
+    gap: 4rem;
+    align-items: start;
+    margin-bottom: 8rem;
+  }
+
+  /* 전부 보기로 가는 화살표 */
+  .all {
+    margin-left: auto;
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+    transition: color var(--out) ease, transform var(--out) var(--ease);
+  }
+
+  .all:hover {
+    color: var(--accent-ink);
+    transform: translateX(3px);
+    transition-duration: var(--in);
+  }
+
+  /* client:only 히트맵이 뜨기 전 레이아웃 흔들림 방지 */
+  .activity {
+    min-height: 12rem;
+  }
+
+  @media (max-width: 960px) {
+    .split {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 3rem;
+      margin-bottom: 5.5rem;
+    }
+  }
+
+  /* Astro 가 컴포넌트 스타일을 스코프해서 global.css 보다 우선순위가 높다 */
+  @media (prefers-reduced-motion: reduce) {
+    .cursor {
+      animation: none;
+    }
+  }
+</style>

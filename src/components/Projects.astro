@@ -1,0 +1,154 @@
+---
+import { getCollection } from 'astro:content';
+import { domainLabel } from '../lib/categories';
+
+// 홈 오른쪽 칸에 들어가는 목록. 재는 값 없이 무엇을 만들고 있는지만
+interface Props {
+  /** 몇 개까지 보일지 */
+  limit?: number;
+}
+
+const { limit } = Astro.props;
+
+const projects = await getCollection('projects');
+
+const order = { ongoing: 0, paused: 1, done: 2 } as const;
+
+const rows = projects
+  .map((p) => ({
+    id: p.id,
+    title: p.data.title,
+    summary: p.data.summary,
+    status: p.data.status,
+    dom: domainLabel(p.data.domain),
+    featured: p.data.featured,
+    year: p.data.start.getUTCFullYear(),
+  }))
+  // frontmatter 에 featured: true 로 표시한 것이 먼저. 그다음 진행 중, 최근 시작 순
+  .sort(
+    (a, b) =>
+      Number(b.featured) - Number(a.featured) ||
+      order[a.status] - order[b.status] ||
+      b.year - a.year
+  )
+  .slice(0, limit ?? undefined);
+---
+
+<ul class="plist">
+  {
+    rows.map((r) => (
+      <li>
+        <a href={`/projects/${r.id}`} class:list={['p', r.status]}>
+          <span class="top">
+            <span class="dot" aria-hidden="true" />
+            <span class="name">{r.title}</span>
+            {r.dom && <span class="dom mono">{r.dom}</span>}
+            <span class="go" aria-hidden="true">→</span>
+          </span>
+          <span class="sum">{r.summary}</span>
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .plist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* 300px 폭에 선을 세 번 그으면 목록이 표처럼 읽힌다 */
+  .plist li + li {
+    margin-top: 1.125rem;
+  }
+
+  .p {
+    position: relative;
+    display: block;
+    padding: 0.5rem 0.75rem;
+    margin: 0 -0.75rem;
+    border-radius: 6px;
+    transition: background var(--out) ease;
+  }
+
+  .p:hover {
+    background: var(--surface);
+    transition-duration: var(--in);
+  }
+
+  .top {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  /* 살아 있는 것만 색이 들어감 */
+  /* 상태 점도 줄 밖으로. 이 칸 안에서 projects 라벨의 사각형과 같은 x */
+  .dot {
+    position: absolute;
+    left: calc(var(--hang) * -1);
+    top: 0.55em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--line-strong);
+  }
+
+  .p.ongoing .dot {
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .name {
+    font-size: var(--t-4);
+    font-weight: 620;
+    letter-spacing: var(--track-3);
+    color: var(--ink);
+    transition: color var(--out) ease;
+  }
+
+  .p.done .name {
+    color: var(--ink-2);
+  }
+
+  .p:hover .name {
+    color: var(--accent-ink);
+    transition-duration: var(--in);
+  }
+
+  /* 배경 상자를 빼고 라벨 층으로. 터키석은 진행 중 점 하나로 모인다 */
+  .dom {
+    font-size: var(--t-8);
+    letter-spacing: var(--track-en);
+    color: var(--ink-3);
+    align-self: center;
+  }
+
+  .go {
+    margin-left: auto;
+    font-size: 0.8125rem;
+    color: var(--accent-ink);
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity var(--out) ease, transform var(--out) var(--ease);
+  }
+
+  .p:hover .go {
+    opacity: 1;
+    transform: none;
+    transition-duration: var(--in);
+  }
+
+  /* 점이 줄 밖으로 나갔으니 맞춤용 들여쓰기가 필요 없다 */
+  .sum {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: var(--t-6);
+    line-height: 1.55;
+    letter-spacing: var(--track-4);
+    color: var(--ink-3);
+  }
+</style>

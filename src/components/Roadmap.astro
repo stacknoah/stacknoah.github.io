@@ -1,0 +1,432 @@
+---
+import { roadmap } from '../data/roadmap';
+import { CATEGORIES } from '../lib/categories';
+
+// 다섯 분류가 세로로 쌓이면 화면만 길어지고 찾기가 어렵다.
+// 한 번에 하나만 펴고 위에서 갈아끼운다. 자바스크립트가 없으면 전부 펴진 채로 보임
+const groups = roadmap.map((g) => ({
+  key: g.category,
+  label: CATEGORIES[g.category],
+  categories: g.categories,
+  written: g.categories.reduce((n, c) => n + c.items.filter((i) => i.link).length, 0),
+}));
+---
+
+<div class="roadmap" data-roadmap>
+  <div class="switch" role="tablist" aria-label="주제 분류">
+    <span class="ink" data-ink aria-hidden="true"></span>
+    {
+      groups.map((g, i) => (
+        <button
+          type="button"
+          role="tab"
+          id={`tab-${g.key}`}
+          aria-controls={`panel-${g.key}`}
+          aria-selected={i === 0 ? 'true' : 'false'}
+          tabindex={i === 0 ? 0 : -1}
+          data-tab={g.key}
+        >
+          {g.label}
+          {g.written > 0 && <span class="mark" aria-hidden="true" />}
+        </button>
+      ))
+    }
+  </div>
+
+  {
+    groups.map((g, i) => (
+      <section
+        class="panel"
+        id={`panel-${g.key}`}
+        role="tabpanel"
+        aria-labelledby={`tab-${g.key}`}
+        data-panel={g.key}
+        data-first={i === 0 ? '' : undefined}
+      >
+        <div class="rail" data-scroll="x" tabindex="0">
+          {g.categories.map((cat) => (
+            <section class="cat">
+              <h3>{cat.name}</h3>
+              <div class="items" data-scroll="y">
+                <ul>
+                  {cat.items.map((item) => (
+                    <li>
+                      {item.link ? (
+                        <a href={item.link}>
+                          <span class="label">{item.label}</span>
+                          <span class="leader" aria-hidden="true" />
+                          <span class="arrow" aria-hidden="true">→</span>
+                        </a>
+                      ) : (
+                        <span class="todo">{item.label}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </section>
+          ))}
+        </div>
+      </section>
+    ))
+  }
+</div>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-roadmap]');
+
+  if (root) {
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+    const panels = [...root.querySelectorAll<HTMLElement>('[data-panel]')];
+    const ink = root.querySelector<HTMLElement>('[data-ink]');
+
+    // 스크롤이 남은 방향을 알려 그쪽 가장자리를 흐리게 한다
+    function edge(el: HTMLElement) {
+      const x = el.dataset.scroll === 'x';
+      const pos = x ? el.scrollLeft : el.scrollTop;
+      const max = x ? el.scrollWidth - el.clientWidth : el.scrollHeight - el.clientHeight;
+      if (max <= 1) return 'none';
+      const head = pos > 1;
+      const tail = pos < max - 1;
+      return head && tail ? 'both' : head ? 'head' : 'tail';
+    }
+
+    const scrollers = [...root.querySelectorAll<HTMLElement>('[data-scroll]')];
+    const syncEdges = () => {
+      for (const el of scrollers) el.dataset.more = edge(el);
+    };
+
+    for (const el of scrollers) {
+      let queued = false;
+      const schedule = () => {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(() => {
+          queued = false;
+          el.dataset.more = edge(el);
+        });
+      };
+      el.addEventListener('scroll', schedule, { passive: true });
+      if ('ResizeObserver' in window) new ResizeObserver(schedule).observe(el);
+
+      // 세로 칸을 훑는 동안 가로 레일이 같이 밀리지 않게
+      if (el.dataset.scroll === 'y') {
+        el.addEventListener(
+          'wheel',
+          (e) => {
+            const max = el.scrollHeight - el.clientHeight;
+            if (max <= 1) return;
+            const atTop = el.scrollTop <= 0 && e.deltaY < 0;
+            const atEnd = el.scrollTop >= max - 1 && e.deltaY > 0;
+            if (!atTop && !atEnd) e.stopPropagation();
+          },
+          { passive: true }
+        );
+      }
+    }
+
+    function moveInk(btn: HTMLButtonElement) {
+      if (!ink) return;
+      ink.style.width = `${btn.offsetWidth}px`;
+      ink.style.transform = `translateX(${btn.offsetLeft}px)`;
+    }
+
+    function select(key: string, focus = false) {
+      for (const t of tabs) {
+        const on = t.dataset.tab === key;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        if (on) {
+          moveInk(t);
+          if (focus) t.focus();
+        }
+      }
+      for (const p of panels) p.hidden = p.dataset.panel !== key;
+      // 바로 잰다. 다음 프레임을 기다리면 배경 탭에서는 requestAnimationFrame 이
+      // 안 돌아서 흐림 표시가 갱신되지 않는다
+      syncEdges();
+    }
+
+    for (const t of tabs) {
+      t.addEventListener('click', () => select(t.dataset.tab!));
+    }
+
+    root.querySelector('[role="tablist"]')!.addEventListener('keydown', (e) => {
+      const ev = e as KeyboardEvent;
+      const i = tabs.findIndex((t) => t.getAttribute('aria-selected') === 'true');
+      let next = -1;
+      if (ev.key === 'ArrowRight') next = (i + 1) % tabs.length;
+      else if (ev.key === 'ArrowLeft') next = (i - 1 + tabs.length) % tabs.length;
+      else if (ev.key === 'Home') next = 0;
+      else if (ev.key === 'End') next = tabs.length - 1;
+      if (next >= 0) {
+        ev.preventDefault();
+        select(tabs[next].dataset.tab!, true);
+      }
+    });
+
+    // 자바스크립트가 살아 있을 때만 한 번에 하나만 펴짐
+    root.dataset.ready = '';
+    select(tabs[0].dataset.tab!);
+    addEventListener('resize', () => {
+      const on = tabs.find((t) => t.getAttribute('aria-selected') === 'true');
+      if (on) moveInk(on);
+      syncEdges();
+    });
+  }
+</script>
+
+<style>
+  /* 갈아끼우는 줄 */
+  .switch {
+    position: relative;
+    display: flex;
+    gap: 2rem;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .switch::-webkit-scrollbar {
+    display: none;
+  }
+
+  .switch button {
+    position: relative;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: none;
+    border: 0;
+    padding: 0 0 0.75rem;
+    font-family: var(--font-sans);
+    font-size: var(--t-3);
+    font-weight: 600;
+    letter-spacing: var(--track-3);
+    color: var(--ink-3);
+    cursor: pointer;
+    transition: color var(--out) ease;
+  }
+
+  .switch button:hover {
+    transition-duration: var(--in);
+  }
+
+  .switch button:hover {
+    color: var(--ink-2);
+  }
+
+  .switch button[aria-selected='true'] {
+    color: var(--ink);
+  }
+
+  /* 글이 있는 분류에만 붙는 점 */
+  .mark {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+    align-self: flex-start;
+    margin-top: 0.45rem;
+  }
+
+  /* 밑줄이 미끄러져 옮겨감 */
+  .ink {
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    height: 2px;
+    width: 0;
+    background: var(--accent);
+    border-radius: 1px;
+    transition: transform 0.28s cubic-bezier(0.2, 0.7, 0.3, 1), width 0.28s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+
+  /* 자바스크립트가 없으면 전부 펴진 채로 보임 */
+  .panel + .panel {
+    margin-top: 2.5rem;
+  }
+
+  [data-ready] .panel + .panel {
+    margin-top: 0;
+  }
+
+  .rail {
+    display: flex;
+    gap: 2.5rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    padding-bottom: 0.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+
+  .rail:focus-visible {
+    outline: 2px solid var(--accent-ink);
+    outline-offset: 6px;
+    border-radius: 2px;
+  }
+
+  .cat {
+    flex: 0 0 17rem;
+    min-width: 0;
+    scroll-snap-align: start;
+  }
+
+  /* 무리를 묶는 말은 전부 라벨 층. activity 라벨이 히트맵을 이름 붙이는 것과 같은 관계 */
+  h3 {
+    font-size: var(--t-7);
+    font-weight: 600;
+    letter-spacing: var(--track-ko);
+    color: var(--ink-3);
+    margin: 0 0 0.75rem;
+  }
+
+  .items {
+    max-height: 13.5rem;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+
+  /* 스크롤이 남은 쪽만 흐려짐. 끝에 닿으면 사라짐 */
+  [data-scroll='x'][data-more='tail'] {
+    mask-image: linear-gradient(to right, #000 calc(100% - 3rem), transparent 100%);
+  }
+  [data-scroll='x'][data-more='head'] {
+    mask-image: linear-gradient(to right, transparent 0, #000 3rem);
+  }
+  [data-scroll='x'][data-more='both'] {
+    mask-image: linear-gradient(to right, transparent 0, #000 3rem, #000 calc(100% - 3rem), transparent 100%);
+  }
+  [data-scroll='y'][data-more='tail'] {
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 2.25rem), transparent 100%);
+  }
+  [data-scroll='y'][data-more='head'] {
+    mask-image: linear-gradient(to bottom, transparent 0, #000 2.25rem);
+  }
+  [data-scroll='y'][data-more='both'] {
+    mask-image: linear-gradient(to bottom, transparent 0, #000 2.25rem, #000 calc(100% - 2.25rem), transparent 100%);
+  }
+
+  .rail::-webkit-scrollbar,
+  .items::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+  .rail::-webkit-scrollbar-track,
+  .items::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .rail::-webkit-scrollbar-thumb,
+  .items::-webkit-scrollbar-thumb {
+    background: var(--line-strong);
+    border-radius: 2px;
+  }
+  .rail:hover::-webkit-scrollbar-thumb,
+  .items:hover::-webkit-scrollbar-thumb {
+    background: var(--accent);
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0 0.5rem 0 0;
+  }
+
+  li {
+    font-size: var(--t-5);
+    line-height: 1.55;
+    letter-spacing: var(--track-4);
+  }
+
+  li a,
+  li .todo {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    margin: 0 -0.5rem;
+    border-radius: 6px;
+    transition: background var(--out) ease, color var(--out) ease;
+  }
+
+  /* 쓴 것과 안 쓴 것을 색만이 아니라 굵기로도 가름 */
+  li a {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  li a:hover {
+    background: var(--surface);
+    color: var(--accent-ink);
+    transition-duration: var(--in);
+  }
+
+  li .todo {
+    color: var(--ink-3);
+    font-weight: 400;
+  }
+
+  .label {
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  .leader {
+    flex: 1 1 auto;
+    min-width: 0.75rem;
+    align-self: center;
+    height: 2px;
+    background-image: radial-gradient(circle, var(--line-strong) 1px, transparent 1px);
+    background-size: 6px 2px;
+    background-repeat: repeat-x;
+    opacity: 0.7;
+    transition: opacity var(--out) ease;
+  }
+
+  li a:hover .leader {
+    opacity: 1;
+    transition-duration: var(--in);
+  }
+
+  .arrow {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    color: var(--accent-ink);
+    opacity: 0;
+    transform: translateX(-3px);
+    transition: opacity var(--out) ease, transform var(--out) var(--ease);
+  }
+
+  li a:hover .arrow {
+    opacity: 1;
+    transform: none;
+    transition-duration: var(--in);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ink {
+      transition: none;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .switch {
+      gap: 1.25rem;
+    }
+    .switch button {
+      font-size: 1.25rem;
+    }
+    .cat {
+      flex: 0 0 82%;
+    }
+    .rail {
+      gap: 1.75rem;
+    }
+  }
+</style>

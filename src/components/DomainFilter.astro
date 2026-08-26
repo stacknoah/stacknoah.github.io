@@ -1,0 +1,85 @@
+---
+import { DOMAINS } from '../lib/categories';
+
+// 프로젝트 목록 필터. 프로젝트는 환경 둘로만 갈림
+const entries = Object.entries(DOMAINS);
+---
+
+<div class="filter mono" role="group" aria-label="환경 필터">
+  <button type="button" data-filter="all" class="on" aria-pressed="true">전체</button>
+  {
+    entries.map(([key, label]) => (
+      <button type="button" data-filter={key} aria-pressed="false">
+        {label}
+      </button>
+    ))
+  }
+</div>
+
+<script>
+  const bar = document.querySelector<HTMLElement>('.filter');
+  if (bar) {
+    const buttons = [...bar.querySelectorAll<HTMLButtonElement>('button')];
+    const items = [...document.querySelectorAll<HTMLElement>('[data-domain]')];
+    const groups = [...document.querySelectorAll<HTMLElement>('[data-filter-group]')];
+    const empty = document.querySelector<HTMLElement>('[data-filter-empty]');
+
+    const apply = (want: string) => {
+      let shown = 0;
+      for (const el of items) {
+        const hit = want === 'all' || el.dataset.domain === want;
+        el.hidden = !hit;
+        if (hit) shown++;
+      }
+      // 항목이 전부 숨겨진 묶음은 제목까지 숨김
+      for (const g of groups) {
+        const alive = [...g.querySelectorAll<HTMLElement>('[data-domain]')].some((el) => !el.hidden);
+        g.hidden = !alive;
+      }
+      if (empty) empty.hidden = shown > 0;
+    };
+
+    for (const btn of buttons) {
+      btn.addEventListener('click', () => {
+        for (const b of buttons) {
+          const on = b === btn;
+          b.classList.toggle('on', on);
+          b.setAttribute('aria-pressed', String(on));
+        }
+        apply(btn.dataset.filter || 'all');
+      });
+    }
+  }
+</script>
+
+<style>
+  .filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-bottom: 1.75rem;
+  }
+
+  button {
+    font-family: inherit;
+    font-size: 0.6875rem;
+    letter-spacing: 0.03em;
+    color: var(--ink-3);
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 0.2rem 0.55rem;
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+
+  button:hover {
+    color: var(--ink);
+    background: var(--surface);
+  }
+
+  button.on {
+    color: var(--ink);
+    border-color: var(--line);
+  }
+</style>

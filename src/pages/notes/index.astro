@@ -1,0 +1,56 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import PostRow from '../../components/PostRow.astro';
+import CategoryFilter from '../../components/CategoryFilter.astro';
+
+const notes = (await getCollection('notes')).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
+
+const byYear = new Map<number, typeof notes>();
+for (const n of notes) {
+  const y = n.data.date.getFullYear();
+  if (!byYear.has(y)) byYear.set(y, []);
+  byYear.get(y)!.push(n);
+}
+---
+
+<Base title="Notes">
+  <header class="page-head rise">
+    <h1>Notes</h1>
+  </header>
+
+  {notes.length > 0 && <CategoryFilter />}
+
+  {
+    [...byYear.entries()].map(([year, list]) => (
+      <section class="year rise rise-2" data-filter-group>
+        <p class="section-label">{year}</p>
+        {list.map((n) => (
+          <PostRow
+            href={`/notes/${n.id}`}
+            date={n.data.date}
+            title={n.data.title}
+            category={n.data.category}
+            tags={n.data.tags}
+          />
+        ))}
+      </section>
+    ))
+  }
+
+  {notes.length === 0 && <p class="empty">아직 쓴 노트가 없음</p>}
+  <p class="empty" data-filter-empty hidden>이 분류에 해당하는 노트가 없음</p>
+</Base>
+
+<style>
+  .year {
+    margin-bottom: 2.75rem;
+  }
+
+  .empty {
+    color: var(--ink-3);
+    font-size: 0.9375rem;
+  }
+</style>

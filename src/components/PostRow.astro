@@ -1,0 +1,32 @@
+---
+import { ymd } from '../lib/format';
+import { categoryLabel } from '../lib/categories';
+
+interface Props {
+  href: string;
+  date: Date;
+  title: string;
+  category?: string;
+  tags?: string[];
+}
+
+const { href, date, title, category, tags = [] } = Astro.props;
+const label = categoryLabel(category);
+---
+
+<a class="row" href={href} data-category={category ?? ''}>
+  <span class="date mono">{ymd(date)}</span>
+  {label && <span class="chip">{label}</span>}
+  <span class="title">{title}</span>
+  <span class="leader" aria-hidden="true"></span>
+  {
+    tags.length > 0 && (
+      <span class="tags">
+        {tags.slice(0, 3).map((t) => (
+          <span class="tag">{t}</span>
+        ))}
+      </span>
+    )
+  }
+  <span class="arrow" aria-hidden="true">→</span>
+</a>

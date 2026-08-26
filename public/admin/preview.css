@@ -1,0 +1,162 @@
+/* 미리보기 창을 실제 글 페이지와 같은 모양으로.
+   여기 값은 src/styles/global.css 의 본문 스타일과 맞춘 것 */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+
+:root {
+  --bg: #fcfcfb;
+  --ink: #1a1a19;
+  --ink-2: #52524e;
+  --ink-3: #83837e;
+  --line: #e7e7e3;
+  --line-strong: #d6d6d1;
+  --surface: #f4f4f1;
+  --accent-ink: #007472;
+  --accent-soft: #dff4f2;
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.75;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 3rem 2rem 5rem;
+}
+
+.head {
+  margin-bottom: 2.5rem;
+}
+
+.head h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.75rem;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink-3);
+}
+
+.meta .chip {
+  letter-spacing: 0.09em;
+  color: var(--ink-3);
+}
+
+.meta .topic {
+  font-family: var(--font-sans);
+  letter-spacing: 0.02em;
+  color: var(--accent-ink);
+}
+
+.meta .tag::before {
+  content: '#';
+  opacity: 0.6;
+}
+
+.desc {
+  margin: 1rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--ink-2);
+}
+
+/* 본문. 실제 사이트의 .prose 와 같은 규칙 */
+.body h1, .body h2, .body h3, .body h4 {
+  font-weight: 650;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  margin: 2.5em 0 0.75em;
+}
+.body h1 { font-size: 1.5rem; }
+.body h2 { font-size: 1.3125rem; }
+.body h3 { font-size: 1.125rem; }
+.body h4 { font-size: 1rem; }
+
+.body p { margin: 0 0 1.25em; }
+.body ul, .body ol { margin: 0 0 1.25em; padding-left: 1.5em; }
+.body li { margin: 0.25em 0; }
+
+.body a {
+  color: var(--accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.body code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--surface);
+  padding: 0.15em 0.35em;
+  border-radius: 4px;
+}
+
+.body pre {
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  line-height: 1.6;
+  margin: 1.5em 0;
+}
+
+.body pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.8125rem;
+}
+
+.body blockquote {
+  margin: 1.5em 0;
+  padding: 0 0 0 1.25em;
+  color: var(--ink-2);
+}
+
+.body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5em 0;
+  font-size: 0.9375rem;
+}
+
+.body th, .body td {
+  border: 1px solid var(--line);
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+
+.body th {
+  font-weight: 600;
+  background: var(--surface);
+}
+
+.body img { max-width: 100%; border-radius: 10px; }
+
+.body hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 2.5em 0;
+}
+
+/* 아직 안 쓴 자리 */
+.empty {
+  color: var(--ink-3);
+  font-style: normal;
+}

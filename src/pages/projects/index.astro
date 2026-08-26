@@ -1,0 +1,150 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import DomainFilter from '../../components/DomainFilter.astro';
+import { ymd } from '../../lib/format';
+import { domainLabel } from '../../lib/categories';
+
+const projects = await getCollection('projects');
+const logs = await getCollection('logs');
+
+const statusLabel = { ongoing: '진행 중', done: '완료', paused: '중단' } as const;
+const statusOrder = { ongoing: 0, paused: 1, done: 2 } as const;
+
+const lastUpdate = new Map<string, Date>();
+for (const log of logs) {
+  const prev = lastUpdate.get(log.data.project);
+  if (!prev || log.data.date > prev) lastUpdate.set(log.data.project, log.data.date);
+}
+
+const sorted = projects.sort((a, b) => {
+  const s = statusOrder[a.data.status] - statusOrder[b.data.status];
+  if (s !== 0) return s;
+  return b.data.start.getTime() - a.data.start.getTime();
+});
+---
+
+<Base title="Projects">
+  <header class="page-head rise">
+    <h1>Projects</h1>
+  </header>
+
+  <DomainFilter />
+
+  <div class="list rise rise-2" data-filter-group>
+    {
+      sorted.map((p) => {
+        const updated = lastUpdate.get(p.id);
+        return (
+          <a href={`/projects/${p.id}`} class="item" data-domain={p.data.domain ?? ''}>
+            <div class="item-head">
+              <span class:list={['status', 'mono', p.data.status]}>
+                <span class="dot" />
+                {statusLabel[p.data.status]}
+              </span>
+              {domainLabel(p.data.domain) && (
+                <span class="chip">{domainLabel(p.data.domain)}</span>
+              )}
+              <span class="item-title">{p.data.title}</span>
+              <span class="date mono">
+                {updated ? `업데이트 ${ymd(updated)}` : `시작 ${ymd(p.data.start)}`}
+              </span>
+            </div>
+            <p class="desc">{p.data.summary}</p>
+          </a>
+        );
+      })
+    }
+  </div>
+
+  <p class="empty" data-filter-empty hidden>이 분류에 해당하는 프로젝트가 없음</p>
+</Base>
+
+<style>
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .item {
+    display: block;
+    padding: 1.125rem 1.125rem;
+    margin: 0 -1.125rem;
+    border-radius: 12px;
+    transition: background 0.15s ease;
+  }
+
+  .item:hover {
+    background: var(--surface);
+  }
+
+  .empty {
+    color: var(--ink-3);
+    font-size: 0.9375rem;
+  }
+
+  .item-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.875rem;
+  }
+
+  .status {
+    font-size: 0.6875rem;
+    color: var(--ink-2);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ink-3);
+  }
+
+  .status.ongoing .dot {
+    background: var(--accent);
+  }
+
+  .status.paused .dot {
+    background: var(--line);
+  }
+
+  .item-title {
+    font-size: 1.125rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+
+  .item:hover .item-title {
+    color: var(--accent-ink);
+  }
+
+  .date {
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: var(--ink-3);
+    flex-shrink: 0;
+  }
+
+  .desc {
+    margin: 0.4rem 0 0;
+    font-size: 0.9375rem;
+    color: var(--ink-2);
+  }
+
+  @media (max-width: 640px) {
+    .item-head {
+      flex-wrap: wrap;
+      gap: 0.25rem 0.875rem;
+    }
+    .date {
+      width: 100%;
+      margin-left: 0;
+    }
+  }
+</style>

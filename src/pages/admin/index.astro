@@ -1,0 +1,135 @@
+---
+// 관리자 화면. public 에 두면 개발 서버가 /admin/ 을 안 열어줘서 정식 페이지로 둔다.
+// 설정은 /admin/config.yml 이 만들어 내보낸다
+export const prerender = true;
+---
+
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>stacknoah 글쓰기</title>
+    <link href="/admin/config.yml" type="text/yaml" rel="cms-config-url" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+    />
+    <style is:inline>
+      /* 편집 화면을 사이트와 같은 결로. 기본값이 파랗고 둥글어서 겉돈다 */
+      :root {
+        --ink: #1a1a19;
+        --ink-3: #83837e;
+        --line: #e7e7e3;
+        --accent-ink: #007472;
+        --accent-soft: #dff4f2;
+        --pretendard: 'Pretendard Variable', Pretendard, -apple-system, sans-serif;
+      }
+      body,
+      input,
+      textarea,
+      select,
+      button {
+        font-family: var(--pretendard) !important;
+      }
+      /* 파란 기본색을 터키석으로 */
+      [class*='Toolbar'] button[class*='active'],
+      [class*='ToggleBackground'] {
+        background-color: var(--accent-ink) !important;
+      }
+      a,
+      [class*='NavLink'][class*='active'] {
+        color: var(--accent-ink) !important;
+      }
+      /* 도움말을 눈에 덜 띄게 */
+      [class*='FieldHint'],
+      p[class*='hint'] {
+        color: var(--ink-3) !important;
+        font-size: 0.75rem !important;
+      }
+      /* 본문 칸을 넉넉하게. 기본은 답답함 */
+      [class*='RawEditor'] textarea,
+      [class*='Slate'] [contenteditable='true'] {
+        font-size: 0.9375rem !important;
+        line-height: 1.7 !important;
+        min-height: 24rem !important;
+      }
+    </style>
+  </head>
+  <body>
+    <script is:inline src="https://unpkg.com/decap-cms@3.3.3/dist/decap-cms.js"></script>
+    <script is:inline>
+      // 미리보기를 실제 글 페이지와 같은 모양으로 그린다.
+      // 기본 미리보기는 항목을 그대로 나열해서 발행된 모습과 딴판이다
+      (function () {
+        if (!window.CMS) return;
+        CMS.registerPreviewStyle('/admin/preview.css');
+
+        var CAT = { cs: 'CS', security: 'Security', consulting: 'Consulting', it: 'IT', ot: 'OT' };
+
+        function el(tag, cls, children) {
+          return window.h(tag, { className: cls }, children);
+        }
+
+        function post(props) {
+          var d = props.entry.get('data');
+          var h = window.h;
+          var meta = [];
+          var date = d.get('date');
+          if (date) meta.push(h('span', { key: 'd' }, String(date).slice(0, 10)));
+          if (d.get('category')) {
+            meta.push(h('span', { key: 'c', className: 'chip' }, CAT[d.get('category')] || d.get('category')));
+          }
+          if (d.get('topic')) meta.push(h('span', { key: 't', className: 'topic' }, d.get('topic')));
+          var tags = d.get('tags');
+          if (tags) {
+            tags.forEach(function (t, i) {
+              meta.push(h('span', { key: 'g' + i, className: 'tag' }, t));
+            });
+          }
+
+          return h('div', { className: 'wrap' }, [
+            h('div', { key: 'head', className: 'head' }, [
+              h('h1', { key: 'h' }, d.get('title') || h('span', { className: 'empty' }, '제목 없음')),
+              h('div', { key: 'm', className: 'meta' }, meta),
+              d.get('description')
+                ? h('p', { key: 'p', className: 'desc' }, d.get('description'))
+                : null,
+            ]),
+            h('div', { key: 'body', className: 'body' }, props.widgetFor('body')),
+          ]);
+        }
+
+        function project(props) {
+          var d = props.entry.get('data');
+          var h = window.h;
+          var STATUS = { ongoing: '진행 중', done: '완료', paused: '중단' };
+          var meta = [h('span', { key: 's' }, STATUS[d.get('status')] || '')];
+          if (d.get('domain')) {
+            meta.push(h('span', { key: 'dm', className: 'chip' }, d.get('domain').toUpperCase()));
+          }
+          var start = d.get('start');
+          var end = d.get('end');
+          if (start) {
+            meta.push(
+              h('span', { key: 'p' }, String(start).slice(0, 10) + ' ~ ' + (end ? String(end).slice(0, 10) : ''))
+            );
+          }
+          return h('div', { className: 'wrap' }, [
+            h('div', { key: 'head', className: 'head' }, [
+              h('h1', { key: 'h' }, d.get('title') || h('span', { className: 'empty' }, '이름 없음')),
+              h('div', { key: 'm', className: 'meta' }, meta),
+              d.get('summary') ? h('p', { key: 'p', className: 'desc' }, d.get('summary')) : null,
+            ]),
+            h('div', { key: 'body', className: 'body' }, props.widgetFor('body')),
+          ]);
+        }
+
+        CMS.registerPreviewTemplate('notes', post);
+        CMS.registerPreviewTemplate('articles', post);
+        CMS.registerPreviewTemplate('projects', project);
+        CMS.registerPreviewTemplate('logs', post);
+      })();
+    </script>
+  </body>
+</html>

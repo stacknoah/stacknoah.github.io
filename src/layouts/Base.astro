@@ -1,0 +1,189 @@
+---
+import '../styles/global.css';
+import Search from '../components/Search.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  narrow?: boolean;
+}
+
+const {
+  title,
+  description = '보안 컨설팅을 공부하며 쌓는 기록, IT와 OT',
+  narrow = false,
+} = Astro.props;
+const pageTitle = title ? `${title} | stacknoah` : 'stacknoah';
+
+const nav = [
+  { href: '/notes', label: 'Notes' },
+  { href: '/articles', label: 'Articles' },
+  { href: '/projects', label: 'Projects' },
+  { href: '/about', label: 'About' },
+];
+
+const path = Astro.url.pathname;
+---
+
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate" type="application/rss+xml" title="stacknoah" href="/rss.xml" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+    />
+  </head>
+  <body>
+    <header class:list={['container', { narrow }]}>
+      <nav>
+        <a href="/" class="logo mono" aria-label="stacknoah 홈">
+          <svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true">
+            <rect x="10" y="5" width="12" height="5" rx="2" fill="var(--accent)"></rect>
+            <rect x="7" y="13" width="18" height="5" rx="2" fill="var(--accent-mid)"></rect>
+            <rect x="4" y="21" width="24" height="5" rx="2" fill="var(--accent-ink)"></rect>
+          </svg>
+          stacknoah
+        </a>
+        <div class="menu">
+          {
+            nav.map((item) => (
+              <a
+                href={item.href}
+                class:list={['menu-item', { active: path.startsWith(item.href) }]}
+              >
+                {item.label}
+              </a>
+            ))
+          }
+          <Search />
+        </div>
+      </nav>
+    </header>
+
+    <main class:list={['container', { narrow }]}>
+      <slot />
+    </main>
+
+    <footer class:list={['container', { narrow }]}>
+      <div class="footer-inner mono">
+        <span>© stacknoah</span>
+        <span class="footer-links">
+          <a href="/admin/" class="muted">글쓰기</a>
+          <a href="https://github.com/stacknoah" class="muted" target="_blank" rel="noopener">github</a>
+          <a href="/rss.xml" class="muted">rss</a>
+        </span>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style>
+  header {
+    padding-top: 2.25rem;
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .logo svg {
+    flex-shrink: 0;
+    transition: transform 0.2s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+
+  .logo:hover svg {
+    transform: translateY(-1px);
+  }
+
+  .menu {
+    display: flex;
+    align-items: center;
+    gap: 1.375rem;
+  }
+
+  .menu-item {
+    font-size: 0.875rem;
+    color: var(--ink-3);
+    position: relative;
+    padding: 0.15rem 0;
+  }
+
+  .menu-item::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -0.3rem;
+    width: 0;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--accent);
+    transform: translateX(-50%);
+    transition: width 0.18s ease;
+  }
+
+  .menu-item:hover {
+    color: var(--ink);
+  }
+
+  .menu-item.active {
+    color: var(--ink);
+    font-weight: 550;
+  }
+
+  .menu-item.active::after {
+    width: 100%;
+  }
+
+  main {
+    min-height: 60vh;
+    padding-bottom: 6rem;
+  }
+
+  footer {
+    padding: 2rem 1.5rem 3rem;
+  }
+
+  .footer-inner {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid var(--line);
+    padding-top: 1.5rem;
+    font-size: 0.75rem;
+    color: var(--ink-3);
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 1.25rem;
+  }
+
+  .footer-links a:hover {
+    color: var(--accent-ink);
+  }
+
+  @media (max-width: 640px) {
+    .menu {
+      gap: 1rem;
+    }
+  }
+</style>

@@ -1,0 +1,445 @@
+/* stacknoah design tokens. 라이트 미니멀, 위계는 크기와 여백으로 */
+:root {
+  /* 종이처럼 아주 살짝 따뜻한 바탕. 순백은 화면에서 날이 서 보임 */
+  --bg: #fcfcfb;
+  --ink: #1a1a19;
+  --ink-2: #52524e;
+  --ink-3: #83837e;
+  --line: #e7e7e3;
+  --line-strong: #d6d6d1;
+  --surface: #f4f4f1;
+
+  /* 터키석. OKLCH 색상각 192도.
+     accent 는 밝아서 채움 전용(대비 2.51).
+     아이콘과 큰 글자는 accent-mid(3.67), 본문 글자와 링크는 accent-ink(5.47) */
+  --accent: #51b0ad;
+  --accent-mid: #22928f;
+  --accent-ink: #007472;
+  --accent-strong: #005855;
+  --accent-soft: #dff4f2;
+
+  /* 히트맵 순차 스케일. 한 색조로 밝음에서 어두움, 단계마다 밝기가 충분히 벌어짐 */
+  --heat-0: #f0efec;
+  --heat-1: #7fcac7;
+  --heat-2: #4fadaa;
+  --heat-3: #22928f;
+  --heat-4: #005855;
+
+  --w-wide: 68rem;
+  --w-text: 46rem;
+
+  /* 활자 사다리 여덟 단. 위는 넓게 벌리고 아래로 갈수록 좁힌다.
+     큰 글자는 조금 다르면 실수로 보이고, 작은 글자는 조금만 달라도 갈린다 */
+  --t-1: clamp(2.25rem, 5vw, 3.5rem);    /* 워드마크 */
+  --t-2: clamp(1.75rem, 3.4vw, 2.25rem); /* 구역 대표 숫자 */
+  --t-3: 1.5rem;     /* 로드맵 갈아끼우는 줄 */
+  --t-4: 1.125rem;   /* 프로젝트 이름, 보조 숫자 */
+  --t-5: 0.9375rem;  /* 로드맵 항목 */
+  --t-6: 0.8125rem;  /* 설명문 */
+  --t-7: 0.75rem;    /* 한글 라벨 */
+  --t-8: 0.6875rem;  /* 로마자 라벨 */
+
+  /* 자간은 크기를 따라간다. 한글은 로마자만큼 못 벌린다 */
+  --track-1: -0.045em;
+  --track-2: -0.035em;
+  --track-3: -0.022em;
+  --track-4: -0.005em;
+  --track-ko: 0.02em;
+  --track-en: 0.09em;
+
+  /* 판면 왼쪽 밖으로 표시가 나가는 거리 */
+  --hang: 0.875rem;
+
+  /* 손이 닿을 때는 즉답, 뗄 때는 여운 */
+  --in: 0.1s;
+  --out: 0.24s;
+  --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+    'Apple SD Gothic Neo', 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* .row 와 .item 이 display 를 지정해서 브라우저 기본 [hidden] 규칙을 덮어씀.
+   필터가 감춘 항목이 그대로 보이던 원인이라 여기서 되돌림 */
+[hidden] {
+  display: none !important;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.75;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.container {
+  max-width: var(--w-wide);
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.container.narrow {
+  max-width: var(--w-text);
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-ink);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.prose a,
+.link {
+  color: var(--accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, var(--accent-ink) 40%, transparent);
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+
+.prose a:hover,
+.link:hover {
+  color: var(--accent-strong);
+  text-decoration-color: currentColor;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.8125em;
+  letter-spacing: -0.01em;
+}
+
+.muted {
+  color: var(--ink-3);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 등장 모션. 아주 짧고 낮게 */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.rise {
+  animation: rise 0.55s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+.rise-2 {
+  animation-delay: 0.08s;
+}
+
+.rise-3 {
+  animation-delay: 0.16s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .rise-2,
+  .rise-3 {
+    animation: none;
+  }
+}
+
+/* 본문 마크다운 스타일 */
+.prose {
+  font-size: 1rem;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  font-weight: 650;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  margin: 2.5em 0 0.75em;
+}
+
+.prose h1 { font-size: 1.5rem; }
+.prose h2 { font-size: 1.3125rem; }
+.prose h3 { font-size: 1.125rem; }
+.prose h4 { font-size: 1rem; }
+
+.prose p { margin: 0 0 1.25em; }
+.prose ul, .prose ol { margin: 0 0 1.25em; padding-left: 1.5em; }
+.prose li { margin: 0.25em 0; }
+.prose li > ul, .prose li > ol { margin-bottom: 0; }
+
+.prose hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 2.5em 0;
+}
+
+.prose blockquote {
+  margin: 1.5em 0;
+  padding: 0 0 0 1.25em;
+  color: var(--ink-2);
+}
+
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--surface);
+  padding: 0.15em 0.35em;
+  border-radius: 4px;
+}
+
+.prose pre {
+  background: var(--surface) !important;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  line-height: 1.6;
+  margin: 1.5em 0;
+}
+
+.prose pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.8125rem;
+}
+
+.prose img {
+  max-width: 100%;
+  border-radius: 10px;
+}
+
+.prose table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5em 0;
+  font-size: 0.9375rem;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid var(--line);
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+
+.prose th {
+  font-weight: 600;
+  background: var(--surface);
+}
+
+/* 로마자 라벨. activity, projects, roadmap */
+.section-label {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: var(--t-8);
+  font-weight: 500;
+  color: var(--ink-3);
+  letter-spacing: var(--track-en);
+  margin: 0 0 1.125rem;
+  display: flex;
+  align-items: center;
+}
+
+/* 줄 안에 두면 뒤따르는 글자가 밀려서 아래 내용과 왼쪽 끝이 어긋난다 */
+.section-label::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--hang) * -1);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 1.5px;
+  background: var(--accent);
+}
+
+/* 고정폭 스택에 한글이 없어서 .mono 로 감싼 한글은 시스템 글꼴로 떨어진다.
+   한글 라벨은 이걸 쓴다. 한글 음절은 이미 네모라 로마자만큼 벌리면 틈이 생김 */
+.meta {
+  font-family: var(--font-sans);
+  font-size: var(--t-7);
+  font-weight: 500;
+  letter-spacing: var(--track-ko);
+  color: var(--ink-3);
+}
+
+/* 글 목록 행. 목차처럼 제목과 오른쪽 사이를 점선으로 이음 */
+.row {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 0.875rem;
+  padding: 0.5rem 0.875rem;
+  margin: 0 -0.875rem;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 2px;
+  height: 0;
+  background: var(--accent);
+  transform: translateY(-50%);
+  transition: height 0.18s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.row:hover {
+  background: var(--surface);
+}
+
+.row:hover::before {
+  height: 62%;
+}
+
+.row .date {
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  flex-shrink: 0;
+  width: 5.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.row .title {
+  color: var(--ink);
+  font-weight: 500;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row:hover .title {
+  color: var(--accent-ink);
+}
+
+/* 목차 점선. 제목이 끝난 자리부터 오른쪽 정보까지 이어짐 */
+.row .leader {
+  flex: 1 1 auto;
+  min-width: 1rem;
+  align-self: center;
+  height: 2px;
+  background-image: radial-gradient(circle, var(--line-strong) 1px, transparent 1px);
+  background-size: 6px 2px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  opacity: 0.75;
+  transition: opacity 0.18s ease;
+}
+
+.row:hover .leader {
+  opacity: 1;
+}
+
+.row .tags {
+  flex-shrink: 0;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.row .arrow {
+  flex-shrink: 0;
+  width: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--accent-ink);
+  opacity: 0;
+  transform: translateX(-3px);
+  transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.row:hover .arrow {
+  opacity: 1;
+  transform: none;
+}
+
+.tag {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--ink-3);
+}
+
+.tag::before {
+  content: '#';
+  opacity: 0.6;
+}
+
+/* 대분류 칩. 값이 전부 로마자라 라벨 층에 그대로 들어간다 */
+.chip {
+  font-family: var(--font-mono);
+  font-size: var(--t-8);
+  letter-spacing: var(--track-en);
+  white-space: nowrap;
+  color: var(--ink-3);
+  line-height: 1.4;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* 목록 페이지 공통 헤더 */
+.page-head {
+  margin: 4.5rem 0 3rem;
+}
+
+.page-head h1 {
+  font-size: 1.625rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.375rem;
+}
+
+.page-head p {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--ink-3);
+}
+
+@media (max-width: 640px) {
+  .row {
+    flex-wrap: wrap;
+    gap: 0.15rem 0.75rem;
+  }
+  .row .title {
+    white-space: normal;
+  }
+  .row .leader,
+  .row .tags,
+  .row .arrow {
+    display: none;
+  }
+}
