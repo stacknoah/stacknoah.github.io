@@ -1,0 +1,353 @@
+---
+// 누적 편수를 시간 위에 그린 계단이다.
+// 가로는 첫 글부터 마지막 글까지, 세로는 지금까지 쓴 편수.
+// 글 한 편이 계단 한 단이고, 계단은 내려가는 법이 없다.
+// 곡선 아래를 옅게 채워서 쌓인 양이 면적으로 보이게 한다.
+//
+// 안 쓴 날에는 좌표 자체가 없다. 그릴 자리가 구조에 없으니 빈 칸도 없다.
+// 지난 격자는 180칸 중 175칸이 비어서, 볼 때마다 안 쓴 날을 먼저 봤다.
+//
+// 가로축 오른쪽 끝을 오늘로 잡으면 안 쓴 날마다 계단 전체가 눌려서
+// 쉬는 것이 그림을 망가뜨리는 벌이 된다. 마지막 글을 끝으로 잡으면
+// 그림이 글을 쓸 때만 바뀐다. 정적 사이트라 빌드도 그때만 돈다.
+
+export interface ActivityEntry {
+  date: string; // YYYY-MM-DD
+  title: string;
+  kind: '노트' | '글';
+  href: string;
+}
+
+interface Props {
+  entries: ActivityEntry[];
+}
+
+const { entries } = Astro.props;
+
+const DAY = 86400000;
+
+function parseYmd(s: string): Date {
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+/** 서머타임이 있는 지역에서도 어긋나지 않게 반올림 */
+function daysBetween(a: Date, b: Date): number {
+  return Math.round((b.getTime() - a.getTime()) / DAY);
+}
+
+function ymd(s: string): string {
+  return s.slice(2).replace(/-/g, '.');
+}
+
+const sorted = [...entries].sort((a, b) => (a.date < b.date ? -1 : 1));
+const n = sorted.length;
+
+// 판면 높이는 옆 칸 바닥과 맞추려고 고정한다. 여섯 편까지는 계단이 위로 자라고
+// 그 뒤로는 단이 얇아진다. 편수가 늘어도 판이 안 커진다
+const H = 180;
+const PITCH_MAX = 30;
+const pitch = n > 0 ? Math.min(H / n, PITCH_MAX) : 0;
+
+// 단 높이가 12px 아래면 손이 단 하나를 못 고른다. 그때는 글마다 걸던 링크를 접는다
+const interactive = pitch >= 12;
+
+const first = n > 0 ? parseYmd(sorted[0].date) : null;
+const last = n > 0 ? parseYmd(sorted[n - 1].date) : null;
+const span = n > 1 ? Math.max(1, daysBetween(first!, last!)) : 1;
+
+const rows = sorted.map((e, i) => ({
+  ...e,
+  i,
+  // 한 편뿐이면 축이 없다. 그 한 단을 왼쪽 끝에 세우고 아래를 끝까지 채운다
+  x: n === 1 ? 0 : (daysBetween(first!, parseYmd(e.date)) / span) * 100,
+  px: i === 0 ? 0 : n === 1 ? 0 : (daysBetween(first!, parseYmd(sorted[i - 1].date)) / span) * 100,
+  newest: i === n - 1,
+  below: i >= n / 2,
+}));
+
+const range = n > 0 ? `${ymd(sorted[0].date)}부터 ${ymd(sorted[n - 1].date)}까지` : '';
+---
+
+<div class="activity" style={`--h:${H}px; --pitch:${pitch}px`}>
+  <p class="section-label">
+    activity
+    {
+      n > 0 && (
+        <Fragment>
+          <span class="lead" aria-hidden="true" />
+          <span class="tally">
+            <b>{n}</b>
+            <i>편</i>
+          </span>
+        </Fragment>
+      )
+    }
+  </p>
+
+  {
+    n > 0 && (
+      <Fragment>
+        <div
+          class="plot"
+          role={interactive ? undefined : 'img'}
+          aria-label={interactive ? undefined : `글 ${n}편, ${range}`}
+        >
+          {rows.map((r) => {
+            const cls = [
+              'r',
+              r.newest ? 'now' : '',
+              r.i === 0 ? 'first' : '',
+              r.below ? 'below' : '',
+              r.x > 78 ? 'end' : '',
+              r.x < 22 ? 'start' : '',
+            ]
+              .filter(Boolean)
+              .join(' ');
+            const style = `--i:${r.i}; --x:${r.x}%; --px:${r.px}%`;
+            const inner = (
+              <Fragment>
+                <span class="fill" aria-hidden="true" />
+                <span class="tread" aria-hidden="true" />
+                <span class="riser" aria-hidden="true" />
+                {interactive && (
+                  <span class="tip" aria-hidden="true">
+                    <b>{ymd(r.date)}</b>
+                    {r.title}
+                  </span>
+                )}
+              </Fragment>
+            );
+            return interactive ? (
+              <a
+                class={cls}
+                style={style}
+                href={r.href}
+                aria-label={`${ymd(r.date)} ${r.kind} ${r.title}`}
+              >
+                {inner}
+              </a>
+            ) : (
+              <span class={cls} style={style}>
+                {inner}
+              </span>
+            );
+          })}
+        </div>
+
+        <p class="axis mono" aria-hidden="true">
+          <span>{ymd(sorted[0].date)}</span>
+          <span>{ymd(sorted[n - 1].date)}</span>
+        </p>
+      </Fragment>
+    )
+  }
+</div>
+
+<style>
+  /* 라벨 오른쪽 값. 숫자와 단위를 같은 크기로 둬서 5편이 한 낱말로 붙는다 */
+  .tally {
+    display: inline-flex;
+    align-items: baseline;
+    flex-shrink: 0;
+  }
+
+  .tally b {
+    font-family: var(--font-mono);
+    font-size: var(--t-7);
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 고정폭 스택에 한글이 없다. 여기서 다시 안 잡으면 시스템 글꼴로 떨어진다 */
+  .tally i {
+    font-family: var(--font-sans);
+    font-style: normal;
+    font-size: var(--t-7);
+    font-weight: 500;
+    letter-spacing: var(--track-ko);
+    color: var(--ink-3);
+    margin-left: -0.02em;
+  }
+
+  .plot {
+    position: relative;
+    height: var(--h);
+  }
+
+  /* 한 단. 아래에서 위로 쌓이고 맨 아래가 첫 글이다 */
+  .r {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--i) * var(--pitch));
+    height: var(--pitch);
+    display: block;
+  }
+
+  .r:hover,
+  .r:focus-visible {
+    z-index: 3;
+  }
+
+  /* 누적 곡선 아래. 이 단은 그 글이 들어온 자리부터 오른쪽 끝까지 차 있다.
+     칸의 폭이 곧 그 글이 기록에 들어와 있던 시간이다 */
+  .fill {
+    position: absolute;
+    left: var(--x);
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--accent-08);
+    transition: background var(--out) ease;
+  }
+
+  /* 앞 단 높이에서 이번 글 자리까지 가로로 간 뒤, 그 자리에서 한 단 올라간다.
+     둘을 이으면 계단이 한 획으로 이어진다 */
+  .tread {
+    position: absolute;
+    left: var(--px);
+    width: calc(var(--x) - var(--px));
+    top: calc(50% + var(--pitch));
+    height: 1.5px;
+    transform: translateY(-50%);
+    background: var(--ink-3);
+    transition: background var(--out) ease;
+  }
+
+  .riser {
+    position: absolute;
+    left: calc(var(--x) - 0.75px);
+    width: 1.5px;
+    top: 50%;
+    height: var(--pitch);
+    background: var(--ink-3);
+    transition: background var(--out) ease;
+  }
+
+  /* 첫 글 앞에는 가로 구간이 없고, 세로도 바닥에서 반 단만 올라온다 */
+  .r.first .tread {
+    display: none;
+  }
+
+  .r.first .riser {
+    height: calc(var(--pitch) / 2);
+  }
+
+  /* 최신 한 단만 터키석. 색이 없어도 맨 위라는 자리로 갈린다 */
+  .r.now .tread,
+  .r.now .riser {
+    background: var(--accent-mid);
+  }
+
+  .r:hover .fill,
+  .r:focus-visible .fill {
+    background: var(--accent-14);
+    transition-duration: var(--in);
+  }
+
+  .r:hover .tread,
+  .r:hover .riser,
+  .r:focus-visible .tread,
+  .r:focus-visible .riser {
+    background: var(--accent-strong);
+    transition-duration: var(--in);
+  }
+
+  .r:focus-visible {
+    outline: none;
+  }
+
+  /* 축 양 끝의 뜻을 밝히는 숫자 둘. 왼쪽이 첫 글, 오른쪽이 마지막 글 */
+  .axis {
+    display: flex;
+    justify-content: space-between;
+    margin: 0.625rem 0 0;
+    font-size: var(--t-8);
+    line-height: 1.4;
+    letter-spacing: var(--track-en);
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 제목은 손이 닿을 때만. 쉬는 화면에 글자를 늘리지 않는다 */
+  .tip {
+    position: absolute;
+    z-index: 5;
+    left: var(--x);
+    bottom: calc(100% + 6px);
+    transform: translate(-50%, 2px);
+    width: max-content;
+    max-width: 15rem;
+    background: var(--bg);
+    color: var(--ink);
+    border-radius: 7px;
+    padding: 0.4rem 0.6rem;
+    font-size: var(--t-8);
+    line-height: 1.5;
+    word-break: keep-all;
+    text-align: left;
+    opacity: 0;
+    pointer-events: none;
+    box-shadow: 0 0 0 1px var(--line-strong), 0 2px 12px rgba(26, 26, 25, 0.06);
+    transition: opacity var(--out) ease, transform var(--out) var(--ease);
+  }
+
+  .r.below .tip {
+    bottom: auto;
+    top: calc(100% + 6px);
+    transform: translate(-50%, -2px);
+  }
+
+  .tip b {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    color: var(--ink-3);
+    letter-spacing: var(--track-en);
+    margin-right: 0.35rem;
+  }
+
+  .r:hover .tip,
+  .r:focus-visible .tip {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  /* 양 끝 단은 말풍선이 판면 밖으로 나가서 한쪽에 붙인다 */
+  .r.start .tip {
+    left: 0;
+    transform: translate(0, 2px);
+  }
+
+  .r.start.below .tip {
+    transform: translate(0, -2px);
+  }
+
+  .r.end .tip {
+    left: auto;
+    right: 0;
+    transform: translate(0, 2px);
+  }
+
+  .r.end.below .tip {
+    transform: translate(0, -2px);
+  }
+
+  .r.start:hover .tip,
+  .r.start:focus-visible .tip,
+  .r.end:hover .tip,
+  .r.end:focus-visible .tip {
+    transform: translate(0, 0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fill,
+    .tread,
+    .riser,
+    .tip {
+      transition: none;
+    }
+  }
+</style>

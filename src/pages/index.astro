@@ -1,16 +1,16 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import Heatmap from '../components/Heatmap.tsx';
+import Activity from '../components/Activity.astro';
 import Roadmap from '../components/Roadmap.astro';
 import Projects from '../components/Projects.astro';
 import { ymd } from '../lib/format';
-import type { HeatEntry } from '../components/Heatmap.tsx';
+import type { ActivityEntry } from '../components/Activity.astro';
 
 const notes = await getCollection('notes');
 const articles = await getCollection('articles');
 
-const entries: HeatEntry[] = [
+const entries: ActivityEntry[] = [
   ...notes.map((e) => ({
     date: ymd(e.data.date),
     title: e.data.title,
@@ -33,7 +33,7 @@ const entries: HeatEntry[] = [
 
   <section class="block split rise rise-2">
     <div class="col activity">
-      <Heatmap entries={entries} months={6} />
+      <Activity entries={entries} />
     </div>
     <div class="col">
       <p class="section-label">
