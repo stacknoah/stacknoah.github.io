@@ -1,14 +1,12 @@
 ---
-// 도형을 그리지 않는다. 글 쓴 날의 날짜 숫자가 그대로 마크다.
-// 기준선 위에 숫자들이 활자처럼 앉고, 조판이 곧 그래프가 된다.
+// 지난 6개월의 날들을 주 단위 열로 깐 밭이다. 한 칸이 하루.
+// 빈 날은 배경의 옅은 점이고, 글 쓴 날에만 터키석 가로 막대가 눕는다.
+// 막대는 로고의 rect 와 같은 문법이다. 이 사이트의 마크가 밭에 심긴다.
+// 그날 몇 편을 썼는지는 색이 아니라 막대의 길이로 갈린다. 로고의 세 막대가
+// 폭으로 갈리는 것과 같고, 흑백으로 찍어도 같게 읽힌다.
 //
-// 왼쪽 끝이 첫 글, 오른쪽 끝이 오늘이다. 안 쓰면 축이 하루씩 길어지면서
-// 숫자들이 왼쪽으로 눌리고, 마지막 숫자와 오늘 사이가 벌어진다.
-// 그 빈 줄에는 기준선도 실선을 그만두고 점선만 남으며, 쉰 날수가
-// 하루마다 커지는 활자로 앉는다. 쉬는 것이 화면에서 자란다.
-//
-// 오른쪽 끝의 세로 획은 커서다. 워드마크의 커서와 같은 터키석이고,
-// 다음 글자가 찍힐 자리에서 기다린다.
+// 안 쓴 날은 안 쓴 날로 보인다. 마지막 막대와 오늘 사이의 빈 칸들이
+// 그대로 쌓이고, 오늘 칸 아래에는 며칠째 비었는지가 하루마다 올라간다.
 
 export interface ActivityEntry {
   date: string; // YYYY-MM-DD
@@ -19,11 +17,14 @@ export interface ActivityEntry {
 
 interface Props {
   entries: ActivityEntry[];
+  /** 몇 개월치를 보여줄지 */
+  months?: number;
 }
 
-const { entries } = Astro.props;
+const { entries, months = 6 } = Astro.props;
 
 const DAY = 86400000;
+const MONTH = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function parseYmd(s: string): Date {
   const [y, m, d] = s.split('-').map(Number);
@@ -35,62 +36,96 @@ function daysBetween(a: Date, b: Date): number {
   return Math.round((b.getTime() - a.getTime()) / DAY);
 }
 
-function ymd(s: string): string {
-  return s.slice(2).replace(/-/g, '.');
+function mmdd(s: string): string {
+  return s.slice(5).replace('-', '.');
 }
-
-function fmt(d: Date): string {
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${String(d.getFullYear()).slice(2)}.${p(d.getMonth() + 1)}.${p(d.getDate())}`;
-}
-
-const sorted = [...entries].sort((a, b) => (a.date < b.date ? -1 : 1));
-const n = sorted.length;
 
 const today = new Date();
 today.setHours(0, 0, 0, 0);
 
-const first = n > 0 ? parseYmd(sorted[0].date) : today;
-const lastD = n > 0 ? daysBetween(first, parseYmd(sorted[n - 1].date)) : 0;
-// 시계가 마지막 글보다 뒤에 있어도 축이 뒤집히지 않게
-const span = Math.max(1, lastD, daysBetween(first, today));
+// 창의 시작은 months 개월 전 달 1일을 품은 일요일. 안 맞추면 첫 열이
+// 토막 나서 월 눈금만 한 칸 들여쓰기 된 것처럼 보인다
+const firstOfMonth = new Date(today.getFullYear(), today.getMonth() - (months - 1), 1);
+const start = new Date(firstOfMonth);
+start.setDate(start.getDate() - start.getDay());
 
-// 같은 날 두 편이면 숫자가 포개진다. 뒤엣것을 한 글자 폭씩 민다
-const seen = new Map<string, number>();
-const marks = sorted.map((e, i) => {
-  const k = seen.get(e.date) ?? 0;
-  seen.set(e.date, k + 1);
-  // 달이 바뀌는 첫 글만 달을 함께 적는다. 나머지는 날짜 두 자리
-  const prevMonth = i > 0 ? sorted[i - 1].date.slice(0, 7) : e.date.slice(0, 7);
-  const withMonth = i > 0 && e.date.slice(0, 7) !== prevMonth;
-  return {
-    ...e,
-    d: daysBetween(first, parseYmd(e.date)),
-    dup: k,
-    label: withMonth ? e.date.slice(5).replace('-', '.') : e.date.slice(8),
-    // 노트와 글을 색이 아니라 굵기로 가른다. 로드맵이 쓴 것과 안 쓴 것을 가르는 문법
-    art: e.kind === '글',
-  };
-});
+const span = daysBetween(start, today);
+const cols = Math.floor(span / 7) + 1;
 
-const idle = span - lastD;
+// 날짜별로 묶는다. 창 밖 글은 격자에 안 그리고 누적 편수에만 들어간다
+const byDate = new Map<string, ActivityEntry[]>();
+for (const e of entries) {
+  const list = byDate.get(e.date);
+  if (list) list.push(e);
+  else byDate.set(e.date, [e]);
+}
+
+const marks: {
+  key: string;
+  col: number;
+  row: number;
+  level: number;
+  items: ActivityEntry[];
+}[] = [];
+
+for (const [date, items] of byDate) {
+  const idx = daysBetween(start, parseYmd(date));
+  if (idx < 0 || idx > span) continue;
+  marks.push({
+    key: date,
+    col: Math.floor(idx / 7),
+    row: idx % 7,
+    level: Math.min(items.length, 3),
+    items,
+  });
+}
+marks.sort((a, b) => (a.key < b.key ? -1 : 1));
+
+const total = entries.length;
+
+const todayRow = span % 7;
+const todayCol = Math.floor(span / 7);
+const aheadCount = 6 - todayRow;
+const pad = (v: number) => String(v).padStart(2, '0');
+const todayKey = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+const todayDone = byDate.has(todayKey);
+
+// 마지막 글부터 오늘까지 며칠 비었는지
+const lastKey = [...byDate.keys()].sort().at(-1);
+const idle = lastKey ? Math.min(span, daysBetween(parseYmd(lastKey), today)) : 0;
+
+// 월 눈금. 그 달이 시작하는 주의 열에 왼쪽을 맞춘다
+const monthTicks: { col: number; label: string }[] = [];
+{
+  const cursor = new Date(firstOfMonth);
+  for (let i = 0; i < months; i++) {
+    const idx = daysBetween(start, cursor);
+    if (idx >= 0 && idx <= span) {
+      monthTicks.push({ col: Math.floor(idx / 7), label: MONTH[cursor.getMonth()] });
+    }
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+}
+
+// 말풍선이 칸 밖으로 나가는 쪽을 빌드 때 정한다
+const anchor = (col: number) => (col >= cols - 6 ? ' end' : col <= 5 ? ' start' : '');
 ---
 
 <div
   class="activity"
   data-activity
-  data-first={n > 0 ? sorted[0].date : ''}
-  data-last={String(lastD)}
-  style={`--span:${span}; --idle:${idle}; --last:${lastD}`}
+  data-start={`${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`}
+  data-last={lastKey ?? ''}
+  style={`--cols:${cols}`}
 >
   <p class="section-label">
     activity
     {
-      n > 0 && (
+      total > 0 && (
         <Fragment>
           <span class="lead" aria-hidden="true" />
           <span class="tally">
-            <b>{n}</b>
+            <b>{total}</b>
             <i>편</i>
           </span>
         </Fragment>
@@ -98,93 +133,127 @@ const idle = span - lastD;
     }
   </p>
 
-  {
-    n > 0 && (
-      <Fragment>
-        <div class="plot">
-          {/* 기준선. 기록이 이어진 구간은 실선, 마지막 글부터 오늘까지는 점선 */}
-          <span class="ruled" aria-hidden="true" />
-          <span class="rest" aria-hidden="true" />
-
-          {/* 쉰 날수. 하루마다 활자가 커진다. 오늘 썼으면 안 나온다 */}
-          <span class="gap" data-idle hidden={idle < 1}>
-            <b data-idle-n>{idle}</b>
-            <i>일째</i>
+  <div class="field">
+    {
+      marks.map((m) => {
+        const label = `${m.key}, ${m.items.length}편`;
+        const cls = `mark lv${m.level}${anchor(m.col)}`;
+        const style = `--c:${m.col}; --r:${m.row}`;
+        const tip = (
+          <span class="tip" aria-hidden="true">
+            <b>{mmdd(m.key)}</b>
+            {m.items[0].title}
+            {m.items.length > 1 && <em>외 {m.items.length - 1}편</em>}
           </span>
+        );
+        const href = m.items[0].href;
+        return href ? (
+          <a class={cls} style={style} href={href} aria-label={label}>
+            {tip}
+          </a>
+        ) : (
+          <span class={cls} style={style} role="img" aria-label={label}>
+            {tip}
+          </span>
+        );
+      })
+    }
 
-          {/* 오늘. 다음 글자가 찍힐 자리의 커서 */}
-          <span class="today" aria-hidden="true" />
+    {/* 오늘. 다음 막대가 눕는 자리의 커서. 워드마크처럼 세 번 깜박이고 멈춘다 */}
+    <span
+      class="now"
+      data-now
+      hidden={todayDone}
+      style={`--c:${todayCol}; --r:${todayRow}`}
+      aria-hidden="true"></span>
 
-          {marks.map((m) => {
-            const cls = [
-              'm',
-              m.art ? 'art' : '',
-              m.d > span * 0.85 ? 'end' : '',
-              m.d < span * 0.1 ? 'start' : '',
-            ]
-              .filter(Boolean)
-              .join(' ');
-            return (
-              <a
-                class={cls}
-                style={`--d:${m.d}; --dup:${m.dup}`}
-                href={m.href}
-                aria-label={`${ymd(m.date)} ${m.kind} ${m.title}`}
-              >
-                <span class="num mono">{m.label}</span>
-                <span class="tip" aria-hidden="true">
-                  <b>{ymd(m.date)}</b>
-                  {m.title}
-                </span>
-              </a>
-            );
-          })}
-          <p class="axis mono" aria-hidden="true">
-            <span>{ymd(sorted[0].date)}</span>
-            <span data-today>{fmt(today)}</span>
-          </p>
-        </div>
-      </Fragment>
-    )
-  }
+    {/* 오늘 이후는 아직 오지 않은 날이라 점도 지운다 */}
+    <span
+      class="ahead"
+      data-ahead
+      hidden={aheadCount < 1}
+      style={`--c:${todayCol}; --r:${todayRow + 1}; --n:${aheadCount}`}
+      aria-hidden="true"></span>
+  </div>
+
+  <div class="months" aria-hidden="true">
+    {
+      monthTicks.map((t) => (
+        <span class={t.col > cols - 3 ? 'tick tail' : 'tick'} style={`--c:${t.col}`}>
+          {t.label}
+        </span>
+      ))
+    }
+    {/* 며칠째 빈 밭인지. 오늘 칸 바로 아래에서 하루마다 올라간다 */}
+    <span class="idle" data-idle hidden={idle < 1}>
+      <b data-idle-n class="mono">{idle}</b>
+      <i>일째</i>
+    </span>
+  </div>
 </div>
 
 <script>
-  // 축의 오른쪽 끝은 보는 사람의 오늘이다. 정적 사이트라 빌드 날짜로 굳어 있어서
-  // 화면에서 다시 잰다. 바뀌는 값은 --span 과 --idle 뿐이고 자리는 CSS 가 계산한다
+  // 오늘 자리는 보는 사람의 시계를 따라간다. 정적 사이트라 빌드 날짜로
+  // 굳어 있어서, 오늘 커서와 앞날 가림과 빈 날수만 화면에서 다시 잰다
   const root = document.querySelector<HTMLElement>('[data-activity]');
-  const firstStr = root?.dataset.first;
+  const startStr = root?.dataset.start;
 
-  if (root && firstStr) {
-    const [y, m, d] = firstStr.split('-').map(Number);
-    const first = new Date(y, m - 1, d);
+  if (root && startStr) {
+    const [y, m, d] = startStr.split('-').map(Number);
+    const start = new Date(y, m - 1, d);
     const now = new Date();
     now.setHours(0, 0, 0, 0);
 
-    const lastD = Number(root.dataset.last ?? 0);
-    const days = Math.round((now.getTime() - first.getTime()) / 86400000);
-    const span = Math.max(1, lastD, days);
-    const idle = span - lastD;
+    const span = Math.round((now.getTime() - start.getTime()) / 86400000);
+    const cols = Number(getComputedStyle(root).getPropertyValue('--cols'));
+    const col = Math.min(cols - 1, Math.floor(span / 7));
+    const row = span % 7;
 
-    root.style.setProperty('--span', String(span));
-    root.style.setProperty('--idle', String(idle));
-
-    const box = root.querySelector<HTMLElement>('[data-idle]');
-    const num = root.querySelector<HTMLElement>('[data-idle-n]');
-    if (box && num) {
-      num.textContent = String(idle);
-      box.hidden = idle < 1;
+    const el = (s: string) => root.querySelector<HTMLElement>(s);
+    const nowEl = el('[data-now]');
+    if (nowEl && !nowEl.hidden) {
+      nowEl.style.setProperty('--c', String(col));
+      nowEl.style.setProperty('--r', String(row));
     }
 
-    const label = root.querySelector<HTMLElement>('[data-today]');
-    if (label) {
-      const p = (v: number) => String(v).padStart(2, '0');
-      label.textContent = `${String(now.getFullYear()).slice(2)}.${p(now.getMonth() + 1)}.${p(now.getDate())}`;
+    const ahead = el('[data-ahead]');
+    if (ahead) {
+      const n = 6 - row;
+      ahead.hidden = n < 1 || col >= cols;
+      ahead.style.setProperty('--c', String(col));
+      ahead.style.setProperty('--r', String(row + 1));
+      ahead.style.setProperty('--n', String(n));
+    }
+
+    const lastStr = root.dataset.last;
+    const box = el('[data-idle]');
+    const num = el('[data-idle-n]');
+    if (lastStr && box && num) {
+      const [ly, lm, ld] = lastStr.split('-').map(Number);
+      const idle = Math.round((now.getTime() - new Date(ly, lm - 1, ld).getTime()) / 86400000);
+      num.textContent = String(idle);
+      box.hidden = idle < 1;
     }
   }
 </script>
 
 <style>
+  /* 빈 날을 도형으로 그리면 175개가 실제 기록 5개와 같은 무게로 싸운다.
+     빈 날은 배경의 점으로 낮추고, 태그로 서는 건 글 쓴 날뿐이다.
+     칸이 폭을 따라가서 미디어 쿼리도 가로 스크롤도 없다 */
+  .activity {
+    --px: 24px;
+    --dot: 1.4px;
+  }
+
+  @supports (width: 1cqw) {
+    .activity {
+      container-type: inline-size;
+      --px: calc(100cqw / var(--cols));
+      --dot: max(1px, calc(var(--px) * 0.06));
+    }
+  }
+
   /* 라벨 오른쪽 값. 숫자와 단위를 같은 크기로 둬서 5편이 한 낱말로 붙는다 */
   .tally {
     display: inline-flex;
@@ -212,139 +281,90 @@ const idle = span - lastD;
     margin-left: -0.02em;
   }
 
-  .plot {
+  .activity :global(.section-label) {
+    margin-bottom: 1.25rem;
+  }
+
+  /* 밭. 한 칸이 하루고 빈 날은 옅은 점 하나 */
+  .field {
     position: relative;
-    height: 205px;
-  }
-
-  /* 조판의 기준선을 판 가운데 둔다. 거의 빈 종이에 한 줄이 앉은 구도 */
-  .ruled {
-    position: absolute;
-    left: 0;
-    width: calc(var(--last) / var(--span) * 100%);
-    bottom: 50%;
-    height: 1px;
-    background: var(--line-strong);
-  }
-
-  /* 마지막 글부터 오늘까지. 선이 끊기고 점만 남는다. 하루 쉴 때마다 길어진다 */
-  .rest {
-    position: absolute;
-    left: calc(var(--last) / var(--span) * 100%);
-    right: 0;
-    bottom: calc(50% - 0.5px);
-    height: 2px;
+    width: 100%;
+    aspect-ratio: var(--cols) / 7;
     background-image: radial-gradient(
-      circle at right center,
-      var(--line-strong) 1px,
-      transparent 1.5px
+      circle at center,
+      var(--line-strong) var(--dot),
+      transparent calc(var(--dot) + 0.5px)
     );
-    background-size: 6px 2px;
-    background-position: right center;
-    background-repeat: repeat-x;
+    background-size: calc(100% / var(--cols)) calc(100% / 7);
   }
 
-  /* 글 한 편. 날짜 숫자가 기준선 위에 활자처럼 앉는다 */
-  .m {
+  .mark,
+  .now,
+  .ahead {
     position: absolute;
-    left: calc(var(--d) / var(--span) * 100%);
-    bottom: 50%;
-    transform: translateX(calc(-50% + var(--dup) * 1.3em));
-    padding: 0.75rem 0.5rem 0.375rem;
-    display: block;
+    left: calc(var(--c) * (100% / var(--cols)));
+    top: calc(var(--r) * (100% / 7));
+    width: calc(100% / var(--cols));
+    height: calc(100% / 7);
   }
 
-  .m:hover,
-  .m:focus-visible {
-    z-index: 3;
+  .mark {
+    display: grid;
+    place-items: center;
   }
 
-  .m:focus-visible {
-    outline: none;
+  /* 글 쓴 날의 막대. 로고의 rect 와 같은 문법으로 밭에 눕는다.
+     편수는 색이 아니라 길이로 갈린다. 로고의 세 막대가 폭으로 갈리듯 */
+  .mark::after {
+    content: '';
+    /* 좁은 화면에서 칸이 줄어도 높이의 두 배는 지킨다. 짧아지면 점으로 뭉개져
+       원 금지 규칙이 무너진다 */
+    width: max(7px, var(--w, 38%));
+    height: max(3.5px, calc(var(--px) * 0.17));
+    border-radius: 999px;
+    background: var(--accent-mid);
+    transition: background var(--out) ease, transform var(--out) var(--ease);
   }
 
-  .num {
-    display: block;
-    font-size: var(--t-4);
-    font-weight: 500;
-    letter-spacing: var(--track-en);
-    line-height: 1;
-    color: var(--ink-3);
-    font-variant-numeric: tabular-nums;
-    transition: color var(--out) ease, transform var(--out) var(--ease);
+  .mark.lv2 {
+    --w: 60%;
+    width: max(9px, 60%);
   }
 
-  /* 글은 노트보다 무겁다. 로드맵이 쓴 것과 안 쓴 것을 가르는 그 문법 */
-  .m.art .num {
-    font-weight: 700;
-    color: var(--ink);
+  .mark.lv3 {
+    --w: 82%;
+    width: max(11px, 82%);
   }
 
-  .m:hover .num,
-  .m:focus-visible .num {
-    color: var(--accent-ink);
-    transform: translateY(calc(var(--slide) * -1));
+  .mark:hover::after,
+  .mark:focus-visible::after {
+    background: var(--accent-strong);
+    transform: scaleX(1.12);
     transition-duration: var(--in);
   }
 
-  /* 양 끝 숫자는 판 밖으로 반이 나가서 한쪽을 벽에 붙인다 */
-  .m.start {
-    transform: translateX(calc(-0.5rem + var(--dup) * 1.3em));
+  .mark:focus-visible {
+    outline: none;
   }
 
-  .m.end {
-    transform: translateX(calc(-100% + 0.5rem + var(--dup) * 1.3em));
+  /* 오늘. 다음 막대가 눕는 자리에서 기다리는 잿빛 커서.
+     색이 없어서 기록으로 안 읽히고, 워드마크처럼 세 번 깜박이고 멈춘다 */
+  .now {
+    display: grid;
+    place-items: center;
   }
 
-  /* 쉰 날수. 며칠째 비어 있는 줄인지가 활자 크기로 자란다 */
-  .gap {
-    position: absolute;
-    left: calc(var(--last) / var(--span) * 100%);
-    right: 0;
-    bottom: calc(50% + 0.375rem);
-    display: flex;
-    align-items: baseline;
-    justify-content: center;
-    gap: 0.12em;
-    white-space: nowrap;
-    pointer-events: none;
-  }
-
-  .gap[hidden] {
-    display: none;
-  }
-
-  .gap b {
-    font-family: var(--font-mono);
-    font-weight: 500;
-    /* 하루 0.2rem 씩. 열흘을 넘기면 라벨 오른쪽 편수보다 큰 활자가 된다 */
-    font-size: clamp(1rem, calc(0.875rem + var(--idle) * 0.2rem), 3.25rem);
-    line-height: 1;
-    letter-spacing: 0;
-    color: var(--ink-2);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .gap i {
-    font-family: var(--font-sans);
-    font-style: normal;
-    font-size: var(--t-7);
-    font-weight: 500;
-    letter-spacing: var(--track-ko);
-    color: var(--ink-3);
-  }
-
-  /* 오늘. 다음 글자 자리에서 기다리는 커서라 글자 키만큼만 서 있다.
-     워드마크 커서처럼 세 번 깜박이고 멈춘다 */
-  .today {
-    position: absolute;
-    right: 0;
-    bottom: calc(50% + 0.25rem);
-    width: 2px;
-    height: 1.5em;
-    background: var(--accent-mid);
-    border-radius: 0.8px;
+  .now::after {
+    content: '';
+    width: max(7px, 38%);
+    height: 2px;
+    border-radius: 1px;
+    background: var(--ink-2);
     animation: blink 1.2s steps(1) 3;
+  }
+
+  .now[hidden] {
+    display: none;
   }
 
   @keyframes blink {
@@ -353,29 +373,78 @@ const idle = span - lastD;
     }
   }
 
-  /* 축 양 끝. 왼쪽이 첫 글, 오른쪽이 오늘. 기준선 바로 아래 붙어서
-     날짜 숫자들과 한 덩어리로 읽힌다 */
-  .axis {
+  /* 오늘 이후. 아직 오지 않은 날이라 점도 지운다 */
+  .ahead {
+    height: calc(var(--n) * (100% / 7));
+    background: var(--bg);
+  }
+
+  .ahead[hidden] {
+    display: none;
+  }
+
+  /* 월 눈금 줄. 오른쪽 끝에는 며칠째 비었는지가 함께 앉는다 */
+  .months {
+    position: relative;
+    height: 1.05rem;
+    margin-top: 0.625rem;
+  }
+
+  .tick {
     position: absolute;
-    left: 0;
-    right: 0;
-    top: calc(50% + 0.75rem);
-    display: flex;
-    justify-content: space-between;
-    margin: 0;
+    left: calc(var(--c) * (100% / var(--cols)));
+    font-family: var(--font-mono);
     font-size: var(--t-8);
-    line-height: 1.4;
+    font-weight: 500;
     letter-spacing: var(--track-en);
     color: var(--ink-3);
+    white-space: nowrap;
+  }
+
+  /* 오른쪽 끝에 붙는 달은 글자가 격자 밖으로 나가지 않게 오른쪽을 맞춘다.
+     빈 날수와 같은 끝을 다투면 달이 물러난다 */
+  .tick.tail {
+    left: auto;
+    right: 0;
+  }
+
+  .idle {
+    position: absolute;
+    right: 0;
+    display: inline-flex;
+    align-items: baseline;
+    background: var(--bg);
+    padding-left: 0.5rem;
+  }
+
+  .idle[hidden] {
+    display: none;
+  }
+
+  .idle b {
+    font-size: var(--t-8);
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--ink-2);
     font-variant-numeric: tabular-nums;
+  }
+
+  .idle i {
+    font-family: var(--font-sans);
+    font-style: normal;
+    font-size: var(--t-8);
+    font-weight: 500;
+    letter-spacing: var(--track-ko);
+    color: var(--ink-3);
+    margin-left: 0.02em;
   }
 
   /* 제목은 손이 닿을 때만. 쉬는 화면에 글자를 늘리지 않는다 */
   .tip {
     position: absolute;
     z-index: 5;
+    top: calc(100% + 6px);
     left: 50%;
-    bottom: calc(100% + 2px);
     transform: translate(-50%, 2px);
     width: max-content;
     max-width: 15rem;
@@ -384,7 +453,6 @@ const idle = span - lastD;
     border-radius: 7px;
     padding: 0.4rem 0.6rem;
     font-size: var(--t-8);
-    font-weight: 400;
     line-height: 1.5;
     word-break: keep-all;
     text-align: left;
@@ -399,47 +467,49 @@ const idle = span - lastD;
     font-weight: 500;
     color: var(--ink-3);
     letter-spacing: var(--track-en);
-    margin-right: 0.35rem;
+    margin-right: 0.3rem;
   }
 
-  .m:hover .tip,
-  .m:focus-visible .tip {
+  .tip em {
+    font-style: normal;
+    color: var(--ink-3);
+    margin-left: 0.3rem;
+  }
+
+  .mark:hover .tip,
+  .mark:focus-visible .tip {
     opacity: 1;
     transform: translate(-50%, 0);
   }
 
-  .m.start .tip {
-    left: 0;
-    transform: translate(0, 2px);
-  }
-
-  .m.end .tip {
+  /* 양 끝 칸은 말풍선이 칸 밖으로 나가서 한쪽에 붙인다 */
+  .mark.end .tip {
     left: auto;
     right: 0;
     transform: translate(0, 2px);
   }
 
-  .m.start:hover .tip,
-  .m.start:focus-visible .tip,
-  .m.end:hover .tip,
-  .m.end:focus-visible .tip {
+  .mark.end:hover .tip,
+  .mark.end:focus-visible .tip {
     transform: translate(0, 0);
   }
 
-  /* 좁은 화면에서는 두 칸이 세로로 쌓여서 옆 칸과 바닥을 맞출 일이 없다.
-     빈 위 여백만 줄인다 */
-  @media (max-width: 960px) {
-    .plot {
-      height: 150px;
-    }
+  .mark.start .tip {
+    left: 0;
+    transform: translate(0, 2px);
+  }
+
+  .mark.start:hover .tip,
+  .mark.start:focus-visible .tip {
+    transform: translate(0, 0);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .num,
+    .mark::after,
     .tip {
       transition: none;
     }
-    .today {
+    .now::after {
       animation: none;
     }
   }
