@@ -38,7 +38,7 @@ export const roadmap: RoadmapGroup[] = [
         items: [
           { label: '프로세스와 스레드' },
           { label: '가상 메모리와 페이징' },
-          { label: '시스템 호출과 커널 모드 전환', link: '/notes/example-syscall' },
+          { label: '시스템 호출과 커널 모드 전환' },
           { label: '파일 시스템과 권한 모델' },
         ],
       },
@@ -79,7 +79,7 @@ export const roadmap: RoadmapGroup[] = [
         items: [
           { label: '대칭키와 공개키' },
           { label: '해시와 전자서명' },
-          { label: 'TLS 핸드셰이크 흐름', link: '/notes/example-tls' },
+          { label: 'TLS 핸드셰이크 흐름' },
         ],
       },
       {
@@ -142,7 +142,7 @@ export const roadmap: RoadmapGroup[] = [
         items: [
           { label: 'OWASP Top 10 항목별 정리' },
           { label: '인증과 인가 취약점' },
-          { label: 'SSRF와 인스턴스 메타데이터', link: '/notes/example-imds' },
+          { label: 'SSRF와 인스턴스 메타데이터' },
           { label: '파일 업로드와 역직렬화' },
         ],
       },
@@ -189,7 +189,7 @@ export const roadmap: RoadmapGroup[] = [
       {
         name: '산업 프로토콜',
         items: [
-          { label: 'Modbus 구조와 진단 시 위험', link: '/notes/example-modbus' },
+          { label: 'Modbus 구조와 진단 시 위험' },
           { label: 'DNP3' },
           { label: 'OPC UA' },
           { label: 'S7comm' },
