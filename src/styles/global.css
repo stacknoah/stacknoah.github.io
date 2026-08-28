@@ -86,6 +86,8 @@
 
 html {
   font-size: 16px;
+  /* 짧은 페이지와 긴 페이지를 오갈 때 스크롤바 폭만큼 판면이 흔들리지 않게 */
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -485,11 +487,25 @@ a {
 }
 
 .page-head h1 {
+  position: relative;
   font-size: var(--t-3);
   font-weight: 700;
   letter-spacing: var(--track-3);
   line-height: 1.25;
   margin: 0 0 0.375rem;
+}
+
+/* 구역 라벨의 사각형이 페이지 제목에도 붙는다.
+   홈과 목록과 소개가 같은 왼쪽 레일에서 시작한다 */
+.page-head h1::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--hang) * -1);
+  top: 0.52em;
+  width: 5px;
+  height: 5px;
+  border-radius: 1.5px;
+  background: var(--accent-mid);
 }
 
 .page-head p {

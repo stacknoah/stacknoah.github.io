@@ -3,8 +3,13 @@ import Base from '../layouts/Base.astro';
 ---
 
 <Base title="404">
-  <div class="wrap">
+  <div class="wrap rise">
     <p class="code mono">404</p>
+    <div class="blank" role="img" aria-label="없는 페이지">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
     <p class="muted">없는 페이지. <a href="/" class="link">처음으로</a></p>
   </div>
 </Base>
@@ -12,11 +17,24 @@ import Base from '../layouts/Base.astro';
 <style>
   .wrap {
     margin: 8rem 0;
+    max-width: 24rem;
   }
 
   .code {
-    font-size: 2rem;
+    font-size: var(--t-2);
+    font-weight: 700;
+    letter-spacing: var(--track-2);
+    color: var(--ink);
+    margin: 0;
+  }
+
+  .blank {
+    margin: 0.5rem 0 1.25rem;
+  }
+
+  .muted {
+    margin: 0;
+    font-size: var(--t-6);
     color: var(--ink-3);
-    margin: 0 0 0.5rem;
   }
 </style>
