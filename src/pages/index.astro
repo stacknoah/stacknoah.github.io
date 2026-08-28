@@ -34,6 +34,7 @@ const entries: ActivityEntry[] = [
 <Base>
   <section class="hero rise">
     <h1 class="mono">stacknoah<span class="cursor">_</span></h1>
+    <p class="ident mono">security consulting · it / ot</p>
   </section>
 
   <section class="block split rise rise-2">
@@ -88,7 +89,17 @@ const entries: ActivityEntry[] = [
 
 <style>
   .hero {
-    margin: 5rem 0 3rem;
+    margin: 5rem 0 3.5rem;
+  }
+
+  /* 이름 아래 한 줄. 설명하는 문장이 아니라 표기다.
+     찾아본 개인 사이트 거의 전부가 이름을 홀로 두지 않았다 */
+  .ident {
+    margin: 0.75rem 0 0;
+    font-size: var(--t-7);
+    font-weight: 500;
+    letter-spacing: var(--track-en);
+    color: var(--ink-3);
   }
 
   .hero h1 {
@@ -111,8 +122,11 @@ const entries: ActivityEntry[] = [
     }
   }
 
-  /* 큰 쉼은 페이지에 한 번뿐. 로드맵 아래는 main 의 padding-bottom 이 받는다 */
+  /* 구역은 실선으로 열린다. 푸터를 닫는 그 선과 같은 선이라
+     페이지가 같은 괘선으로 짜인다. 라벨의 점선은 목차, 실선은 구조 */
   .block {
+    border-top: 1px solid var(--line);
+    padding-top: 1.75rem;
     margin-bottom: 0;
   }
 
@@ -122,7 +136,7 @@ const entries: ActivityEntry[] = [
     grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
     gap: 4rem;
     align-items: start;
-    margin-bottom: 5rem;
+    margin-bottom: 4.5rem;
   }
 
   /* 오른쪽 칸의 둘째 구역. 프로젝트와 글 사이의 쉼.
