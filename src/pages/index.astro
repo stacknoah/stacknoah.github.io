@@ -4,11 +4,17 @@ import Base from '../layouts/Base.astro';
 import Activity from '../components/Activity.astro';
 import Roadmap from '../components/Roadmap.astro';
 import Projects from '../components/Projects.astro';
+import PostRow from '../components/PostRow.astro';
 import { ymd } from '../lib/format';
 import type { ActivityEntry } from '../components/Activity.astro';
 
 const notes = await getCollection('notes');
 const articles = await getCollection('articles');
+
+// 홈에 보이는 글. 최신 3편, 없으면 빈 줄 셋이 자리를 지킨다
+const recent = [...articles]
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 3);
 
 const entries: ActivityEntry[] = [
   ...notes.map((e) => ({
@@ -45,6 +51,35 @@ const entries: ActivityEntry[] = [
     </div>
   </section>
 
+  <section class="block writing rise rise-3">
+    <p class="section-label">
+      articles
+      <span class="lead" aria-hidden="true"></span>
+      <a href="/articles" class="all" aria-label="글 전부 보기">→</a>
+    </p>
+    {
+      recent.length > 0 ? (
+        <div class="list">
+          {recent.map((a) => (
+            <PostRow
+              href={`/articles/${a.id}`}
+              date={a.data.date}
+              title={a.data.title}
+              category={a.data.category}
+              tags={a.data.tags}
+            />
+          ))}
+        </div>
+      ) : (
+        <div class="blank" role="img" aria-label="아직 쓴 글이 없음">
+          <span />
+          <span />
+          <span />
+        </div>
+      )
+    }
+  </section>
+
   <section class="block rise rise-3">
     <p class="section-label">roadmap<span class="lead" aria-hidden="true"></span></p>
     <Roadmap />
@@ -79,6 +114,16 @@ const entries: ActivityEntry[] = [
   /* 큰 쉼은 페이지에 한 번뿐. 로드맵 아래는 main 의 padding-bottom 이 받는다 */
   .block {
     margin-bottom: 0;
+  }
+
+  .writing {
+    margin-bottom: 5rem;
+  }
+
+  @media (max-width: 960px) {
+    .writing {
+      margin-bottom: 4rem;
+    }
   }
 
   /* 왼쪽 히트맵, 오른쪽 프로젝트 */
