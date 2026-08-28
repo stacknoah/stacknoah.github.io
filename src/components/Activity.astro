@@ -118,18 +118,22 @@ const anchor = (col: number) => (col >= cols - 6 ? ' end' : col <= 5 ? ' start' 
   data-last={lastKey ?? ''}
   style={`--cols:${cols}`}
 >
-  <div class="plate">
-    <p class="tag mono">activity</p>
+  <p class="section-label">
+    activity
     {
       total > 0 && (
-        <p class="tally">
-          <b>{total}</b>
-          <i>편</i>
-        </p>
+        <Fragment>
+          <span class="lead" aria-hidden="true" />
+          <span class="tally">
+            <b>{total}</b>
+            <i>편</i>
+          </span>
+        </Fragment>
       )
     }
+  </p>
 
-    <div class="field">
+  <div class="field">
     {
       marks.map((m) => {
         const label = `${m.key}, ${m.items.length}편`;
@@ -172,20 +176,19 @@ const anchor = (col: number) => (col >= cols - 6 ? ' end' : col <= 5 ? ' start' 
       aria-hidden="true"></span>
   </div>
 
-    <div class="months" aria-hidden="true">
-      {
-        monthTicks.map((t) => (
-          <span class={t.col > cols - 3 ? 'tick tail' : 'tick'} style={`--c:${t.col}`}>
-            {t.label}
-          </span>
-        ))
-      }
-      {/* 며칠째 빈 밭인지. 오늘 칸 바로 아래에서 하루마다 올라간다 */}
-      <span class="idle" data-idle hidden={idle < 1}>
-        <b data-idle-n class="mono">{idle}</b>
-        <i>일째</i>
-      </span>
-    </div>
+  <div class="months" aria-hidden="true">
+    {
+      monthTicks.map((t) => (
+        <span class={t.col > cols - 3 ? 'tick tail' : 'tick'} style={`--c:${t.col}`}>
+          {t.label}
+        </span>
+      ))
+    }
+    {/* 며칠째 빈 밭인지. 오늘 칸 바로 아래에서 하루마다 올라간다 */}
+    <span class="idle" data-idle hidden={idle < 1}>
+      <b data-idle-n class="mono">{idle}</b>
+      <i>일째</i>
+    </span>
   </div>
 </div>
 
@@ -249,51 +252,11 @@ const anchor = (col: number) => (col >= cols - 6 ? ' end' : col <= 5 ? ' start' 
     }
   }
 
-  /* 밭을 도면의 명판처럼 가는 테두리로 두른다. 라벨과 집계는
-     테두리 선을 끊고 그 위에 앉는다. 홈에서 유일한 상자다 */
-  .plate {
-    position: relative;
-    border: 1px solid var(--line);
-    padding: 1.5rem 1.125rem 1.125rem;
-  }
-
-  .tag {
-    position: absolute;
-    top: -0.6em;
-    left: 0.875rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin: 0;
-    padding: 0 0.5rem;
-    background: var(--bg);
-    font-size: var(--t-8);
-    font-weight: 500;
-    letter-spacing: var(--track-en);
-    line-height: 1.2;
-    color: var(--ink-3);
-  }
-
-  /* 구역 라벨의 사각형과 같은 표식 */
-  .tag::before {
-    content: '';
-    width: 5px;
-    height: 5px;
-    border-radius: 1.5px;
-    background: var(--accent-mid);
-  }
-
   /* 라벨 오른쪽 값. 숫자와 단위를 같은 크기로 둬서 5편이 한 낱말로 붙는다 */
   .tally {
-    position: absolute;
-    top: -0.7em;
-    right: 0.875rem;
     display: inline-flex;
     align-items: baseline;
-    margin: 0;
-    padding: 0 0.5rem;
-    background: var(--bg);
-    line-height: 1.3;
+    flex-shrink: 0;
   }
 
   .tally b {
@@ -314,6 +277,10 @@ const anchor = (col: number) => (col >= cols - 6 ? ' end' : col <= 5 ? ' start' 
     letter-spacing: var(--track-ko);
     color: var(--ink-3);
     margin-left: -0.02em;
+  }
+
+  .activity :global(.section-label) {
+    margin-bottom: 1.25rem;
   }
 
   /* 밭. 한 칸이 하루고 빈 날은 아주 짧은 가로 획 하나다.
