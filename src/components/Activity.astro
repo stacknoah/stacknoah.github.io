@@ -239,18 +239,16 @@ const anchor = (col: number) => (col >= cols - 6 ? ' end' : col <= 5 ? ' start' 
 
 <style>
   /* 빈 날을 도형으로 그리면 175개가 실제 기록 5개와 같은 무게로 싸운다.
-     빈 날은 배경의 점으로 낮추고, 태그로 서는 건 글 쓴 날뿐이다.
+     빈 날은 배경의 흔적으로 낮추고, 태그로 서는 건 글 쓴 날뿐이다.
      칸이 폭을 따라가서 미디어 쿼리도 가로 스크롤도 없다 */
   .activity {
     --px: 24px;
-    --dot: 1.4px;
   }
 
   @supports (width: 1cqw) {
     .activity {
       container-type: inline-size;
       --px: calc(100cqw / var(--cols));
-      --dot: max(1px, calc(var(--px) * 0.06));
     }
   }
 
@@ -285,15 +283,18 @@ const anchor = (col: number) => (col >= cols - 6 ? ' end' : col <= 5 ? ' start' 
     margin-bottom: 1.25rem;
   }
 
-  /* 밭. 한 칸이 하루고 빈 날은 옅은 점 하나 */
+  /* 밭. 한 칸이 하루고 빈 날은 아주 짧은 가로 획 하나다.
+     밭의 모든 것이 같은 가로 획 문법을 쓴다. 빈 날은 흐리고 짧게,
+     글 쓴 날은 터키석으로 길게, 오늘은 짙은 잿빛으로.
+     원을 섞으면 막대와 딴 식구가 되어 질감이 깨진다 */
   .field {
     position: relative;
     width: 100%;
     aspect-ratio: var(--cols) / 7;
     background-image: radial-gradient(
-      circle at center,
-      var(--line-strong) var(--dot),
-      transparent calc(var(--dot) + 0.5px)
+      ellipse 11% 4% at center,
+      var(--line-strong) 68%,
+      transparent 100%
     );
     background-size: calc(100% / var(--cols)) calc(100% / 7);
   }
@@ -317,9 +318,9 @@ const anchor = (col: number) => (col >= cols - 6 ? ' end' : col <= 5 ? ' start' 
      편수는 색이 아니라 길이로 갈린다. 로고의 세 막대가 폭으로 갈리듯 */
   .mark::after {
     content: '';
-    /* 좁은 화면에서 칸이 줄어도 높이의 두 배는 지킨다. 짧아지면 점으로 뭉개져
-       원 금지 규칙이 무너진다 */
-    width: max(7px, var(--w, 38%));
+    /* 좁은 화면에서 칸이 줄어도 최소 폭을 지킨다. 짧아지면 점으로 뭉개져
+       원 금지 규칙이 무너진다. 퍼센트는 칸 폭 기준 */
+    width: max(var(--w-min, 7px), var(--w, 38%));
     height: max(3.5px, calc(var(--px) * 0.17));
     border-radius: 999px;
     background: var(--accent-mid);
@@ -328,12 +329,12 @@ const anchor = (col: number) => (col >= cols - 6 ? ' end' : col <= 5 ? ' start' 
 
   .mark.lv2 {
     --w: 60%;
-    width: max(9px, 60%);
+    --w-min: 9px;
   }
 
   .mark.lv3 {
     --w: 82%;
-    width: max(11px, 82%);
+    --w-min: 11px;
   }
 
   .mark:hover::after,
