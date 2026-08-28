@@ -48,21 +48,29 @@ const groups = roadmap.map((g) => ({
             <section class="cat">
               <h3>{cat.name}</h3>
               <div class="items" data-scroll="y">
-                <ul>
-                  {cat.items.map((item) => (
-                    <li>
-                      {item.link ? (
-                        <a href={item.link}>
-                          <span class="label">{item.label}</span>
-                          <span class="leader" aria-hidden="true" />
-                          <span class="arrow" aria-hidden="true">→</span>
-                        </a>
-                      ) : (
-                        <span class="todo">{item.label}</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
+                {cat.items.length > 0 ? (
+                  <ul>
+                    {cat.items.map((item) => (
+                      <li>
+                        {item.link ? (
+                          <a href={item.link}>
+                            <span class="label">{item.label}</span>
+                            <span class="leader" aria-hidden="true" />
+                            <span class="arrow" aria-hidden="true">→</span>
+                          </a>
+                        ) : (
+                          <span class="todo">{item.label}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div class="blank" role="img" aria-label="아직 쓴 글이 없음">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                )}
               </div>
             </section>
           ))}
@@ -375,6 +383,32 @@ const groups = roadmap.map((g) => ({
   .label {
     flex-shrink: 1;
     min-width: 0;
+  }
+
+  /* 아직 글이 없는 컬럼. 글자가 앉기 전의 빈 줄 세 개가
+     목차 점선과 같은 레시피로 눕고, 아래로 갈수록 짧아지며 잦아든다 */
+  .blank {
+    display: grid;
+    row-gap: 1.375rem;
+    padding: 0.875rem 0 0.25rem;
+  }
+
+  .blank span {
+    height: 2px;
+    background-image: radial-gradient(circle, var(--line-strong) 1px, transparent 1px);
+    background-size: 6px 2px;
+    background-repeat: repeat-x;
+    opacity: 0.55;
+  }
+
+  .blank span:nth-child(2) {
+    width: 72%;
+    opacity: 0.4;
+  }
+
+  .blank span:nth-child(3) {
+    width: 44%;
+    opacity: 0.25;
   }
 
   .leader {
