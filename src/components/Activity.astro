@@ -133,7 +133,8 @@ const anchor = (col: number) => (col >= cols - 6 ? ' end' : col <= 5 ? ' start' 
     }
   </p>
 
-  <div class="field">
+  <div class="frame">
+    <div class="field">
     {
       marks.map((m) => {
         const label = `${m.key}, ${m.items.length}편`;
@@ -174,6 +175,7 @@ const anchor = (col: number) => (col >= cols - 6 ? ' end' : col <= 5 ? ' start' 
       hidden={aheadCount < 1}
       style={`--c:${todayCol}; --r:${todayRow + 1}; --n:${aheadCount}`}
       aria-hidden="true"></span>
+    </div>
   </div>
 
   <div class="months" aria-hidden="true">
@@ -281,6 +283,37 @@ const anchor = (col: number) => (col >= cols - 6 ? ' end' : col <= 5 ? ' start' 
 
   .activity :global(.section-label) {
     margin-bottom: 1.25rem;
+  }
+
+  /* 밭을 도면의 모서리 눈금 넷이 잡는다. 상자로 두르지 않고
+     네 귀퉁이만 표시해서, 갇히지 않으면서 도판의 자리가 선다.
+     사진 촬영의 파인더와 제도판의 맞춤 표시가 쓰는 그 문법이다 */
+  .frame {
+    position: relative;
+    padding: 0.875rem 0.75rem;
+    --arm: 11px;
+    /* 질감의 대시보다 한 단계 짙어야 구조로 읽힌다 */
+    --corner: var(--ink-3);
+    background-image:
+      linear-gradient(var(--corner), var(--corner)),
+      linear-gradient(var(--corner), var(--corner)),
+      linear-gradient(var(--corner), var(--corner)),
+      linear-gradient(var(--corner), var(--corner)),
+      linear-gradient(var(--corner), var(--corner)),
+      linear-gradient(var(--corner), var(--corner)),
+      linear-gradient(var(--corner), var(--corner)),
+      linear-gradient(var(--corner), var(--corner));
+    background-repeat: no-repeat;
+    background-size:
+      var(--arm) 1px, 1px var(--arm),
+      var(--arm) 1px, 1px var(--arm),
+      var(--arm) 1px, 1px var(--arm),
+      var(--arm) 1px, 1px var(--arm);
+    background-position:
+      left top, left top,
+      right top, right top,
+      left bottom, left bottom,
+      right bottom, right bottom;
   }
 
   /* 밭. 한 칸이 하루고 빈 날은 아주 짧은 가로 획 하나다.
