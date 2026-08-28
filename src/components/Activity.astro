@@ -1,15 +1,13 @@
 ---
-// 누적 편수를 시간 위에 그린 계단이다.
-// 가로는 첫 글부터 마지막 글까지, 세로는 지금까지 쓴 편수.
-// 글 한 편이 계단 한 단이고, 계단은 내려가는 법이 없다.
-// 곡선 아래를 옅게 채워서 쌓인 양이 면적으로 보이게 한다.
+// 시간 한 줄에 기록을 세운다. 왼쪽 끝이 첫 글, 오른쪽 끝이 오늘.
+// 글 한 편이 획 하나고, 획은 지워지지 않는다. 쌓인 편수는 획의 수와 빽빽함이다.
 //
-// 안 쓴 날에는 좌표 자체가 없다. 그릴 자리가 구조에 없으니 빈 칸도 없다.
+// 오른쪽 끝을 오늘로 잡는다. 안 쓰면 축이 하루씩 길어지면서 지금까지 쓴 것이
+// 왼쪽으로 눌리고, 마지막 획과 오늘 사이가 벌어진다. 쉬는 것이 화면에서
+// 자란다. 이게 이 구역이 하는 일이다.
+//
+// 안 쓴 날을 칸으로 그리지는 않는다. 벌어지는 것은 면적이 아니라 간격 하나다.
 // 지난 격자는 180칸 중 175칸이 비어서, 볼 때마다 안 쓴 날을 먼저 봤다.
-//
-// 가로축 오른쪽 끝을 오늘로 잡으면 안 쓴 날마다 계단 전체가 눌려서
-// 쉬는 것이 그림을 망가뜨리는 벌이 된다. 마지막 글을 끝으로 잡으면
-// 그림이 글을 쓸 때만 바뀐다. 정적 사이트라 빌드도 그때만 돈다.
 
 export interface ActivityEntry {
   date: string; // YYYY-MM-DD
@@ -40,36 +38,49 @@ function ymd(s: string): string {
   return s.slice(2).replace(/-/g, '.');
 }
 
+function fmt(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${String(d.getFullYear()).slice(2)}.${p(d.getMonth() + 1)}.${p(d.getDate())}`;
+}
+
 const sorted = [...entries].sort((a, b) => (a.date < b.date ? -1 : 1));
 const n = sorted.length;
 
-// 판면 높이는 옆 칸 바닥과 맞추려고 고정한다. 여섯 편까지는 계단이 위로 자라고
-// 그 뒤로는 단이 얇아진다. 편수가 늘어도 판이 안 커진다
-const H = 180;
-const PITCH_MAX = 30;
-const pitch = n > 0 ? Math.min(H / n, PITCH_MAX) : 0;
+const today = new Date();
+today.setHours(0, 0, 0, 0);
 
-// 단 높이가 12px 아래면 손이 단 하나를 못 고른다. 그때는 글마다 걸던 링크를 접는다
-const interactive = pitch >= 12;
+const first = n > 0 ? parseYmd(sorted[0].date) : today;
+const lastD = n > 0 ? daysBetween(first, parseYmd(sorted[n - 1].date)) : 0;
+// 시계가 마지막 글보다 뒤에 있어도 축이 뒤집히지 않게
+const span = Math.max(1, lastD, daysBetween(first, today));
 
-const first = n > 0 ? parseYmd(sorted[0].date) : null;
-const last = n > 0 ? parseYmd(sorted[n - 1].date) : null;
-const span = n > 1 ? Math.max(1, daysBetween(first!, last!)) : 1;
+// 획 하나를 손으로 고르려면 10px 은 있어야 한다. 그보다 촘촘해지면 링크를 접는다
+const interactive = n > 0 && 660 / n >= 10;
 
-const rows = sorted.map((e, i) => ({
-  ...e,
-  i,
-  // 한 편뿐이면 축이 없다. 그 한 단을 왼쪽 끝에 세우고 아래를 끝까지 채운다
-  x: n === 1 ? 0 : (daysBetween(first!, parseYmd(e.date)) / span) * 100,
-  px: i === 0 ? 0 : n === 1 ? 0 : (daysBetween(first!, parseYmd(sorted[i - 1].date)) / span) * 100,
-  newest: i === n - 1,
-  below: i >= n / 2,
-}));
+// 같은 날 두 편이면 겹쳐서 한 획으로 보인다. 3px 씩 밀어 둘로 보이게 한다
+const seen = new Map<string, number>();
+const strokes = sorted.map((e) => {
+  const k = seen.get(e.date) ?? 0;
+  seen.set(e.date, k + 1);
+  return {
+    ...e,
+    d: daysBetween(first, parseYmd(e.date)),
+    dup: k,
+    // 노트와 글을 색이 아니라 획 높이로 가른다. 흑백으로 찍어도 같게 읽힌다
+    h: e.kind === '글' ? 78 : 62,
+  };
+});
 
-const range = n > 0 ? `${ymd(sorted[0].date)}부터 ${ymd(sorted[n - 1].date)}까지` : '';
+const idle = span - lastD;
 ---
 
-<div class="activity" style={`--h:${H}px; --pitch:${pitch}px`}>
+<div
+  class="activity"
+  data-activity
+  data-first={n > 0 ? sorted[0].date : ''}
+  data-last={String(lastD)}
+  style={`--span:${span}; --last:${lastD}`}
+>
   <p class="section-label">
     activity
     {
@@ -91,29 +102,41 @@ const range = n > 0 ? `${ymd(sorted[0].date)}부터 ${ymd(sorted[n - 1].date)}�
         <div
           class="plot"
           role={interactive ? undefined : 'img'}
-          aria-label={interactive ? undefined : `글 ${n}편, ${range}`}
+          aria-label={
+            interactive
+              ? undefined
+              : `글 ${n}편, ${ymd(sorted[0].date)}부터 ${ymd(sorted[n - 1].date)}까지`
+          }
         >
-          {rows.map((r) => {
+          {/* 기록이 이어진 구간은 실선, 마지막 글부터 오늘까지는 점선 */}
+          <span class="ruled" aria-hidden="true" />
+          <span class="rest" aria-hidden="true" />
+
+          {/* 쉰 날수. 오늘 썼으면 안 나온다 */}
+          <span class="idle" data-idle hidden={idle < 1}>
+            <b data-idle-n>{idle}</b>
+            <i>일째</i>
+          </span>
+
+          {/* 오늘 */}
+          <span class="today" aria-hidden="true" />
+
+          {strokes.map((s) => {
             const cls = [
-              'r',
-              r.newest ? 'now' : '',
-              r.i === 0 ? 'first' : '',
-              r.below ? 'below' : '',
-              r.x > 78 ? 'end' : '',
-              r.x < 22 ? 'start' : '',
+              's',
+              s.d > span * 0.78 ? 'end' : '',
+              s.d < span * 0.22 ? 'start' : '',
             ]
               .filter(Boolean)
               .join(' ');
-            const style = `--i:${r.i}; --x:${r.x}%; --px:${r.px}%`;
+            const style = `--d:${s.d}; --h:${s.h}%; --dup:${s.dup}`;
             const inner = (
               <Fragment>
-                <span class="fill" aria-hidden="true" />
-                <span class="tread" aria-hidden="true" />
-                <span class="riser" aria-hidden="true" />
+                <span class="bar" aria-hidden="true" />
                 {interactive && (
                   <span class="tip" aria-hidden="true">
-                    <b>{ymd(r.date)}</b>
-                    {r.title}
+                    <b>{ymd(s.date)}</b>
+                    {s.title}
                   </span>
                 )}
               </Fragment>
@@ -122,8 +145,8 @@ const range = n > 0 ? `${ymd(sorted[0].date)}부터 ${ymd(sorted[n - 1].date)}�
               <a
                 class={cls}
                 style={style}
-                href={r.href}
-                aria-label={`${ymd(r.date)} ${r.kind} ${r.title}`}
+                href={s.href}
+                aria-label={`${ymd(s.date)} ${s.kind} ${s.title}`}
               >
                 {inner}
               </a>
@@ -137,22 +160,58 @@ const range = n > 0 ? `${ymd(sorted[0].date)}부터 ${ymd(sorted[n - 1].date)}�
 
         <p class="axis mono" aria-hidden="true">
           <span>{ymd(sorted[0].date)}</span>
-          <span>{ymd(sorted[n - 1].date)}</span>
+          <span data-today>{fmt(today)}</span>
         </p>
       </Fragment>
     )
   }
 </div>
 
+<script>
+  // 축의 오른쪽 끝은 보는 사람의 오늘이다. 정적 사이트라 빌드 날짜로 굳어 있어서
+  // 화면에서 다시 잰다. 바뀌는 값은 축 길이 하나뿐이라 CSS 변수 하나만 고친다
+  const root = document.querySelector<HTMLElement>('[data-activity]');
+  const firstStr = root?.dataset.first;
+
+  if (root && firstStr) {
+    const [y, m, d] = firstStr.split('-').map(Number);
+    const first = new Date(y, m - 1, d);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    const lastD = Number(root.dataset.last ?? 0);
+    const days = Math.round((now.getTime() - first.getTime()) / 86400000);
+    const span = Math.max(1, lastD, days);
+
+    root.style.setProperty('--span', String(span));
+
+    const idle = span - lastD;
+    const box = root.querySelector<HTMLElement>('[data-idle]');
+    const num = root.querySelector<HTMLElement>('[data-idle-n]');
+    if (box && num) {
+      num.textContent = String(idle);
+      box.hidden = idle < 1;
+    }
+
+    const label = root.querySelector<HTMLElement>('[data-today]');
+    if (label) {
+      const p = (v: number) => String(v).padStart(2, '0');
+      label.textContent = `${String(now.getFullYear()).slice(2)}.${p(now.getMonth() + 1)}.${p(now.getDate())}`;
+    }
+  }
+</script>
+
 <style>
   /* 라벨 오른쪽 값. 숫자와 단위를 같은 크기로 둬서 5편이 한 낱말로 붙는다 */
-  .tally {
+  .tally,
+  .idle {
     display: inline-flex;
     align-items: baseline;
     flex-shrink: 0;
   }
 
-  .tally b {
+  .tally b,
+  .idle b {
     font-family: var(--font-mono);
     font-size: var(--t-7);
     font-weight: 500;
@@ -162,7 +221,8 @@ const range = n > 0 ? `${ymd(sorted[0].date)}부터 ${ymd(sorted[n - 1].date)}�
   }
 
   /* 고정폭 스택에 한글이 없다. 여기서 다시 안 잡으면 시스템 글꼴로 떨어진다 */
-  .tally i {
+  .tally i,
+  .idle i {
     font-family: var(--font-sans);
     font-style: normal;
     font-size: var(--t-7);
@@ -174,93 +234,99 @@ const range = n > 0 ? `${ymd(sorted[0].date)}부터 ${ymd(sorted[n - 1].date)}�
 
   .plot {
     position: relative;
-    height: var(--h);
+    height: 180px;
   }
 
-  /* 한 단. 아래에서 위로 쌓이고 맨 아래가 첫 글이다 */
-  .r {
+  /* 기록이 이어진 구간. 첫 글부터 마지막 글까지 */
+  .ruled {
     position: absolute;
     left: 0;
-    right: 0;
-    bottom: calc(var(--i) * var(--pitch));
-    height: var(--pitch);
-    display: block;
-  }
-
-  .r:hover,
-  .r:focus-visible {
-    z-index: 3;
-  }
-
-  /* 누적 곡선 아래. 이 단은 그 글이 들어온 자리부터 오른쪽 끝까지 차 있다.
-     칸의 폭이 곧 그 글이 기록에 들어와 있던 시간이다 */
-  .fill {
-    position: absolute;
-    left: var(--x);
-    right: 0;
-    top: 0;
+    width: calc(var(--last) / var(--span) * 100%);
     bottom: 0;
-    background: var(--accent-08);
-    transition: background var(--out) ease;
+    height: 1px;
+    background: var(--line-strong);
   }
 
-  /* 앞 단 높이에서 이번 글 자리까지 가로로 간 뒤, 그 자리에서 한 단 올라간다.
-     둘을 이으면 계단이 한 획으로 이어진다 */
-  .tread {
+  /* 마지막 글부터 오늘까지. 선이 끊기고 점만 남는다. 하루 쉴 때마다 길어진다 */
+  .rest {
     position: absolute;
-    left: var(--px);
-    width: calc(var(--x) - var(--px));
-    top: calc(50% + var(--pitch));
-    height: 1.5px;
-    transform: translateY(-50%);
-    background: var(--ink-3);
-    transition: background var(--out) ease;
+    left: calc(var(--last) / var(--span) * 100%);
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background-image: radial-gradient(
+      circle at right center,
+      var(--line-strong) 1px,
+      transparent 1.5px
+    );
+    background-size: 6px 2px;
+    background-position: right center;
+    background-repeat: repeat-x;
   }
 
-  .riser {
+  /* 쉰 날수. 점선 구간 한가운데 앉는다 */
+  .idle {
     position: absolute;
-    left: calc(var(--x) - 0.75px);
-    width: 1.5px;
-    top: 50%;
-    height: var(--pitch);
-    background: var(--ink-3);
-    transition: background var(--out) ease;
+    bottom: 0.625rem;
+    left: calc((var(--last) / var(--span) * 100%) + (100% - var(--last) / var(--span) * 100%) / 2);
+    transform: translateX(-50%);
+    white-space: nowrap;
   }
 
-  /* 첫 글 앞에는 가로 구간이 없고, 세로도 바닥에서 반 단만 올라온다 */
-  .r.first .tread {
+  .idle[hidden] {
     display: none;
   }
 
-  .r.first .riser {
-    height: calc(var(--pitch) / 2);
-  }
-
-  /* 최신 한 단만 터키석. 색이 없어도 맨 위라는 자리로 갈린다 */
-  .r.now .tread,
-  .r.now .riser {
+  /* 오늘. 판에서 가장 높고 유일하게 색이 있는 세로 획이다 */
+  .today {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 2px;
+    height: 100%;
     background: var(--accent-mid);
+    border-radius: 0.8px;
   }
 
-  .r:hover .fill,
-  .r:focus-visible .fill {
-    background: var(--accent-14);
-    transition-duration: var(--in);
+  /* 글 한 편. 손이 잡을 자리를 넓게 두고 그 안에 획만 보인다 */
+  .s {
+    position: absolute;
+    left: calc(var(--d) / var(--span) * 100% + var(--dup) * 3px);
+    bottom: 0;
+    width: 14px;
+    height: 100%;
+    margin-left: -6px;
+    display: block;
   }
 
-  .r:hover .tread,
-  .r:hover .riser,
-  .r:focus-visible .tread,
-  .r:focus-visible .riser {
+  .s:hover,
+  .s:focus-visible {
+    z-index: 3;
+  }
+
+  .bar {
+    position: absolute;
+    left: 6px;
+    bottom: 0;
+    width: 2px;
+    height: var(--h);
+    border-radius: 0.8px;
+    background: var(--ink-3);
+    transition: background var(--out) ease, height var(--out) var(--ease);
+  }
+
+  .s:hover .bar,
+  .s:focus-visible .bar {
     background: var(--accent-strong);
+    height: calc(var(--h) + 8%);
     transition-duration: var(--in);
   }
 
-  .r:focus-visible {
+  .s:focus-visible {
     outline: none;
   }
 
-  /* 축 양 끝의 뜻을 밝히는 숫자 둘. 왼쪽이 첫 글, 오른쪽이 마지막 글 */
+  /* 축 양 끝. 왼쪽이 첫 글, 오른쪽이 오늘 */
   .axis {
     display: flex;
     justify-content: space-between;
@@ -276,8 +342,8 @@ const range = n > 0 ? `${ymd(sorted[0].date)}부터 ${ymd(sorted[n - 1].date)}�
   .tip {
     position: absolute;
     z-index: 5;
-    left: var(--x);
-    bottom: calc(100% + 6px);
+    left: 7px;
+    bottom: calc(var(--h) + 10px);
     transform: translate(-50%, 2px);
     width: max-content;
     max-width: 15rem;
@@ -295,12 +361,6 @@ const range = n > 0 ? `${ymd(sorted[0].date)}부터 ${ymd(sorted[n - 1].date)}�
     transition: opacity var(--out) ease, transform var(--out) var(--ease);
   }
 
-  .r.below .tip {
-    bottom: auto;
-    top: calc(100% + 6px);
-    transform: translate(-50%, -2px);
-  }
-
   .tip b {
     font-family: var(--font-mono);
     font-weight: 500;
@@ -309,43 +369,33 @@ const range = n > 0 ? `${ymd(sorted[0].date)}부터 ${ymd(sorted[n - 1].date)}�
     margin-right: 0.35rem;
   }
 
-  .r:hover .tip,
-  .r:focus-visible .tip {
+  .s:hover .tip,
+  .s:focus-visible .tip {
     opacity: 1;
     transform: translate(-50%, 0);
   }
 
-  /* 양 끝 단은 말풍선이 판면 밖으로 나가서 한쪽에 붙인다 */
-  .r.start .tip {
+  /* 양 끝 획은 말풍선이 판 밖으로 나가서 한쪽에 붙인다 */
+  .s.start .tip {
     left: 0;
     transform: translate(0, 2px);
   }
 
-  .r.start.below .tip {
-    transform: translate(0, -2px);
-  }
-
-  .r.end .tip {
+  .s.end .tip {
     left: auto;
     right: 0;
     transform: translate(0, 2px);
   }
 
-  .r.end.below .tip {
-    transform: translate(0, -2px);
-  }
-
-  .r.start:hover .tip,
-  .r.start:focus-visible .tip,
-  .r.end:hover .tip,
-  .r.end:focus-visible .tip {
+  .s.start:hover .tip,
+  .s.start:focus-visible .tip,
+  .s.end:hover .tip,
+  .s.end:focus-visible .tip {
     transform: translate(0, 0);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .fill,
-    .tread,
-    .riser,
+    .bar,
     .tip {
       transition: none;
     }
