@@ -241,15 +241,20 @@ const anchor = (col: number) => (col >= cols - 6 ? ' end' : col <= 5 ? ' start' 
   /* 빈 날을 도형으로 그리면 175개가 실제 기록 5개와 같은 무게로 싸운다.
      빈 날은 배경의 흔적으로 낮추고, 태그로 서는 건 글 쓴 날뿐이다.
      칸이 폭을 따라가서 미디어 쿼리도 가로 스크롤도 없다 */
-  /* 구역 전체가 옅은 바탕 판 위에 앉는다. 선을 긋는 대신 바닥의 색이
-     갈라서, 밭이 종이 위에 놓인 판으로 읽힌다. 안쪽 내용의 왼쪽 끝은
-     바깥 판면과 같은 자리다. 판만 사방으로 배어 나간다 */
+  /* 구역 전체가 옅은 터키석 판 위에 앉는다. 회색 판 위 회색 결은
+     흐린 얼룩으로 읽혀서, 판과 결을 같은 터키석 계열로 맞춘다.
+     톤 안의 톤이라 판이 물빛 종이 한 장이 된다.
+     안쪽 내용의 왼쪽 끝은 바깥 판면과 같은 자리고 판만 사방으로 배어 나간다 */
   .activity {
     --px: 24px;
-    --panel: var(--surface);
+    /* 투명 혼합이 아니라 종이 위 불투명 혼합. 앞날 가림이 이 색으로 점을 덮는다 */
+    --panel: #eaf1f0;
+    --panel: color-mix(in srgb, var(--accent-ink) 7%, var(--bg));
+    --grain: var(--accent-24);
     background: var(--panel);
     border-radius: 10px;
-    padding: 1.375rem 1.375rem 1rem;
+    /* 아래 여백이 위보다 얇은 것은 옆 칸과 바닥을 맞추기 위해서다 */
+    padding: 1.375rem 1.375rem 0.5rem;
     margin: 0 -1.375rem;
   }
 
@@ -301,7 +306,7 @@ const anchor = (col: number) => (col >= cols - 6 ? ' end' : col <= 5 ? ' start' 
     aspect-ratio: var(--cols) / 7;
     background-image: radial-gradient(
       ellipse 11% 4% at center,
-      var(--line-strong) 68%,
+      var(--grain, var(--line-strong)) 68%,
       transparent 100%
     );
     background-size: calc(100% / var(--cols)) calc(100% / 7);
