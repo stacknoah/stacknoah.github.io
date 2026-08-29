@@ -122,11 +122,9 @@ const entries: ActivityEntry[] = [
     }
   }
 
-  /* 구역은 실선으로 열린다. 푸터를 닫는 그 선과 같은 선이라
-     페이지가 같은 괘선으로 짜인다. 라벨의 점선은 목차, 실선은 구조 */
+  /* 선은 긋지 않는다. 구역은 여백과 activity 의 바탕 판이 가른다.
+     페이지의 선 어휘는 점선(목차)과 푸터의 실선 둘뿐 */
   .block {
-    border-top: 1px solid var(--line);
-    padding-top: 1.75rem;
     margin-bottom: 0;
   }
 
