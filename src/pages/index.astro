@@ -9,6 +9,7 @@ import type { ActivityEntry } from '../components/Activity.astro';
 
 const notes = await getCollection('notes');
 const articles = await getCollection('articles');
+const chapters = await getCollection('chapters');
 
 // 홈 오른쪽 칸에 보이는 글. 최신 3편, 없으면 빈 줄 셋이 자리를 지킨다
 const recent = [...articles]
@@ -27,6 +28,13 @@ const entries: ActivityEntry[] = [
     title: e.data.title,
     kind: '글' as const,
     href: `/articles/${e.id}`,
+  })),
+  // 연재 세부 페이지도 글이다. 밭에 찍히고 편수에 든다
+  ...chapters.map((e) => ({
+    date: ymd(e.data.date),
+    title: e.data.title,
+    kind: '글' as const,
+    href: `/projects/${e.id}`,
   })),
 ];
 ---

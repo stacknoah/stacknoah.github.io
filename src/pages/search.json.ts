@@ -18,10 +18,11 @@ function plain(md: string): string {
 }
 
 export const GET: APIRoute = async () => {
-  const [notes, articles, projects] = await Promise.all([
+  const [notes, articles, projects, chapters] = await Promise.all([
     getCollection('notes'),
     getCollection('articles'),
     getCollection('projects'),
+    getCollection('chapters'),
   ]);
 
   const docs = [
@@ -50,6 +51,15 @@ export const GET: APIRoute = async () => {
       category: domainLabel(e.data.domain) ?? '',
       tags: e.data.tags,
       desc: e.data.summary,
+      text: plain(e.body ?? ''),
+    })),
+    ...chapters.map((e) => ({
+      url: `/projects/${e.id}`,
+      kind: '연재',
+      title: e.data.title,
+      category: '',
+      tags: e.data.tags,
+      desc: '',
       text: plain(e.body ?? ''),
     })),
   ];

@@ -43,7 +43,8 @@ const articles = defineCollection({
 // 프로젝트 메타. 본문은 프로젝트 개요
 // 글과 달리 domain(ot/it)만 씀. 프로젝트는 환경으로 갈리지 주제로 갈리지 않음
 const projects = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/projects' }),
+  // 하위 폴더는 연재 세부 페이지(chapters)의 자리라 최상위만 줍는다
+  loader: glob({ pattern: '*.md', base: './src/content/projects' }),
   schema: z.object({
     title: z.string(),
     status: z.enum(['ongoing', 'done', 'paused']),
@@ -55,8 +56,34 @@ const projects = defineCollection({
     summary: z.string(),
     repo: z.string().url().optional(),
     tags: z.array(z.string()).default([]),
+    /** 연재 차례. 순번이 chapters 의 order 와 맞물려서, 그 번호의
+        세부 페이지를 올리면 차례에 저절로 링크가 걸린다.
+        안 쓴 편은 흐린 계획으로 남는다 */
+    series: z
+      .array(
+        z.object({
+          title: z.string(),
+          /** 한 줄 요지 */
+          note: z.string().optional(),
+        })
+      )
+      .optional(),
     attachments,
   }),
 });
 
-export const collections = { notes, articles, projects };
+/** 프로젝트의 세부 페이지. src/content/projects/<프로젝트>/<글>.md
+    경로가 곧 소속이라 별도 필드 없이 폴더 이름으로 프로젝트에 묶인다 */
+const chapters = defineCollection({
+  loader: glob({ pattern: '*/*.md', base: './src/content/projects' }),
+  schema: z.object({
+    title: z.string(),
+    date: z.coerce.date(),
+    /** 연재에서 몇 번째인지. 프로젝트 frontmatter 의 series 순번과 맞물린다 */
+    order: z.number().int().positive(),
+    tags: z.array(z.string()).default([]),
+    attachments,
+  }),
+});
+
+export const collections = { notes, articles, projects, chapters };

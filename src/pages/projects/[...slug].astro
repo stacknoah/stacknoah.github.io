@@ -16,6 +16,13 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 const { Content } = await render(entry);
 
+// 이 프로젝트의 세부 페이지들. series 의 순번(order)으로 맞물린다.
+// 글을 올리면 그 번호의 차례 항목에 저절로 링크가 걸린다
+const chapters = (await getCollection('chapters')).filter((c) =>
+  c.id.startsWith(`${entry.id}/`)
+);
+const chapterByOrder = new Map(chapters.map((c) => [c.data.order, c]));
+
 const statusLabel = { ongoing: '진행 중', done: '완료', paused: '중단' } as const;
 
 const period = `${ymd(entry.data.start)} ~ ${entry.data.end ? ymd(entry.data.end) : '현재'}`;
@@ -50,6 +57,43 @@ const period = `${ymd(entry.data.start)} ~ ${entry.data.end ? ymd(entry.data.end
     <div class="prose">
       <Content />
     </div>
+
+    {
+      entry.data.series && entry.data.series.length > 0 && (
+        <section class="series">
+          <p class="section-label">series<span class="lead" aria-hidden="true" /></p>
+          <ol>
+            {entry.data.series.map((c, i) => {
+              const ch = chapterByOrder.get(i + 1);
+              const no = String(i + 1).padStart(2, '0');
+              return (
+                <li>
+                  {ch ? (
+                    <a href={`/projects/${ch.id}`}>
+                      <span class="no mono">{no}</span>
+                      <span class="body">
+                        <span class="t">{c.title}</span>
+                        {c.note && <span class="n">{c.note}</span>}
+                      </span>
+                      <span class="arrow" aria-hidden="true">→</span>
+                    </a>
+                  ) : (
+                    <span class="todo">
+                      <span class="no mono">{no}</span>
+                      <span class="body">
+                        <span class="t">{c.title}</span>
+                        {c.note && <span class="n">{c.note}</span>}
+                      </span>
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+      )
+    }
+
     <Attachments items={entry.data.attachments} />
 
   </article>
@@ -119,6 +163,101 @@ const period = `${ymd(entry.data.start)} ~ ${entry.data.end ? ymd(entry.data.end
   .summary {
     color: var(--ink-2);
     margin: 1rem 0 0;
+  }
+
+  /* 연재 차례. 로드맵과 같은 규칙으로, 쓴 편만 진하고 나머지는 계획으로 남는다 */
+  .series {
+    margin-top: 3rem;
+  }
+
+  .series ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .series li + li {
+    margin-top: 0.25rem;
+  }
+
+  .series a,
+  .series .todo {
+    display: flex;
+    align-items: baseline;
+    gap: 0.875rem;
+    padding: 0.55rem var(--hang);
+    margin: 0 calc(var(--hang) * -1);
+    border-radius: 6px;
+    transition: background var(--out) ease;
+  }
+
+  .series a:hover {
+    background: var(--accent-08);
+    transition-duration: var(--in);
+  }
+
+  .no {
+    flex-shrink: 0;
+    font-size: var(--t-8);
+    font-weight: 500;
+    letter-spacing: var(--track-en);
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .series .body {
+    min-width: 0;
+  }
+
+  .series .t {
+    display: block;
+    font-size: var(--t-5);
+    font-weight: 560;
+    letter-spacing: var(--track-4);
+    line-height: 1.5;
+    color: var(--ink);
+    transition: color var(--out) ease;
+  }
+
+  .series a:hover .t {
+    color: var(--accent-ink);
+    transition-duration: var(--in);
+  }
+
+  .series .n {
+    display: block;
+    margin-top: 0.125rem;
+    font-size: var(--t-7);
+    line-height: 1.6;
+    letter-spacing: var(--track-4);
+    color: var(--ink-3);
+  }
+
+  /* 안 쓴 편. 제목도 요지도 한 톤 물러난다 */
+  .series .todo .t {
+    color: var(--ink-3);
+    font-weight: 450;
+  }
+
+  .series .todo .n {
+    color: color-mix(in srgb, var(--ink-3) 62%, transparent);
+  }
+
+  .series .arrow {
+    margin-left: auto;
+    flex-shrink: 0;
+    align-self: center;
+    font-size: 0.8125rem;
+    color: var(--accent-ink);
+    opacity: 0;
+    transform: translateX(calc(var(--slide) * -1));
+    transition: opacity var(--out) ease, transform var(--out) var(--ease);
+  }
+
+  .series a:hover .arrow {
+    opacity: 1;
+    transform: none;
+    transition-duration: var(--in);
   }
 
 </style>

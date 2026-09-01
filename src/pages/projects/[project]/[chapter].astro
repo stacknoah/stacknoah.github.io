@@ -1,0 +1,185 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../../layouts/Base.astro';
+import Attachments from '../../../components/Attachments.astro';
+import { ymd } from '../../../lib/format';
+
+export async function getStaticPaths() {
+  const [chapters, projects] = await Promise.all([
+    getCollection('chapters'),
+    getCollection('projects'),
+  ]);
+  return chapters.map((entry) => {
+    const [projectId, chapterId] = entry.id.split('/');
+    const project = projects.find((p) => p.id === projectId)!;
+    const siblings = chapters
+      .filter((c) => c.id.startsWith(`${projectId}/`))
+      .sort((a, b) => a.data.order - b.data.order);
+    const at = siblings.findIndex((c) => c.id === entry.id);
+    return {
+      params: { project: projectId, chapter: chapterId },
+      props: {
+        entry,
+        project,
+        prev: at > 0 ? siblings[at - 1] : null,
+        next: at < siblings.length - 1 ? siblings[at + 1] : null,
+      },
+    };
+  });
+}
+
+const { entry, project, prev, next } = Astro.props;
+const { Content } = await render(entry);
+const no = String(entry.data.order).padStart(2, '0');
+---
+
+<Base title={entry.data.title} narrow>
+  <article>
+    <header>
+      <a href={`/projects/${project.id}`} class="back mono">{project.data.title}</a>
+      <h1>
+        <span class="no mono">{no}</span>
+        {entry.data.title}
+      </h1>
+      <div class="meta mono">
+        <span>{ymd(entry.data.date)}</span>
+        {entry.data.tags.map((t) => <span class="tag">{t}</span>)}
+      </div>
+    </header>
+
+    <div class="prose">
+      <Content />
+    </div>
+    <Attachments items={entry.data.attachments} />
+
+    {/* 연재의 앞뒤 편. 다 읽고 나면 다음으로 가는 길이 바로 있다 */}
+    {
+      (prev || next) && (
+        <nav class="turn" aria-label="연재 이동">
+          {prev ? (
+            <a href={`/projects/${prev.id}`} class="p">
+              <span class="dir mono">←</span>
+              <span class="tt">{prev.data.title}</span>
+            </a>
+          ) : (
+            <span />
+          )}
+          {next && (
+            <a href={`/projects/${next.id}`} class="n">
+              <span class="tt">{next.data.title}</span>
+              <span class="dir mono">→</span>
+            </a>
+          )}
+        </nav>
+      )
+    }
+  </article>
+</Base>
+
+<style>
+  header {
+    margin: 4rem 0 2.5rem;
+  }
+
+  .back {
+    position: relative;
+    font-size: 0.75rem;
+    color: var(--ink-3);
+  }
+
+  .back::before {
+    content: '←';
+    position: absolute;
+    left: calc(var(--hang) * -1);
+    top: 0;
+  }
+
+  .back:hover {
+    color: var(--ink);
+  }
+
+  h1 {
+    font-size: var(--t-2);
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 1rem 0 0.75rem;
+    letter-spacing: var(--track-2);
+  }
+
+  /* 연재 순번. 제목의 일부가 아니라 번호표라 판면 밖에 건다 */
+  .no {
+    position: absolute;
+    left: calc(var(--hang) * -1);
+    transform: translateX(-100%);
+    padding-right: 0.75rem;
+    font-size: var(--t-7);
+    font-weight: 500;
+    letter-spacing: var(--track-en);
+    color: var(--ink-3);
+    line-height: 2.6;
+  }
+
+  h1 {
+    position: relative;
+  }
+
+  .meta {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    font-size: 0.75rem;
+    color: var(--ink-3);
+    flex-wrap: wrap;
+  }
+
+  /* 앞뒤 편 이동 */
+  .turn {
+    display: flex;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .turn a {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    max-width: 46%;
+    font-size: var(--t-6);
+    color: var(--ink-2);
+    transition: color var(--out) ease;
+  }
+
+  .turn a:hover {
+    color: var(--accent-ink);
+    transition-duration: var(--in);
+  }
+
+  .turn .n {
+    text-align: right;
+    margin-left: auto;
+  }
+
+  .dir {
+    flex-shrink: 0;
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+
+  .tt {
+    line-height: 1.5;
+  }
+
+  @media (max-width: 640px) {
+    .no {
+      position: static;
+      transform: none;
+      display: block;
+      padding: 0;
+      line-height: 1.4;
+      margin-bottom: 0.25rem;
+    }
+  }
+</style>
