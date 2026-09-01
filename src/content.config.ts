@@ -79,8 +79,9 @@ const chapters = defineCollection({
   schema: z.object({
     title: z.string(),
     date: z.coerce.date(),
-    /** 연재에서 몇 번째인지. 프로젝트 frontmatter 의 series 순번과 맞물린다 */
-    order: z.number().int().positive(),
+    /** 연재에서 몇 번째인지. 프로젝트 frontmatter 의 series 순번과 맞물린다.
+        CMS 의 select 가 문자열로 저장할 수 있어 coerce */
+    order: z.coerce.number().int().positive(),
     tags: z.array(z.string()).default([]),
     attachments,
   }),

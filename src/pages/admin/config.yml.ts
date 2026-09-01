@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { getCollection } from 'astro:content';
 import { roadmap } from '../../data/roadmap';
 import { CATEGORIES } from '../../lib/categories';
 
@@ -71,7 +72,8 @@ const writingFields = [
   { name: 'body', label: '본문', widget: 'markdown' },
 ];
 
-const config = {
+// 컬렉션을 뒤에서 더 밀어 넣으므로 느슨한 타입으로 둔다
+const config: { backend: unknown; [k: string]: any; collections: any[] } = {
   backend: {
     name: 'github',
     repo: 'stacknoah/stacknoah.github.io',
@@ -179,36 +181,49 @@ const config = {
       ],
     },
 
-    // 프로젝트 연재의 세부 페이지. 폴더가 곧 소속이라 경로에 프로젝트 이름이 들어감
-    {
-      name: 'chapters',
-      label: '연재 글',
-      label_singular: '연재 글',
-      folder: 'src/content/projects/ot-security',
-      create: true,
-      slug: '{{slug}}',
-      extension: 'md',
-      format: 'yaml-frontmatter',
-      summary: '{{order}}. {{title}}',
-      sortable_fields: ['order', 'date'],
-      fields: [
-        { name: 'title', label: '제목', widget: 'string' },
-        { ...dateField, name: 'date', label: '날짜' },
-        {
-          name: 'order',
-          label: '순번',
-          widget: 'number',
-          value_type: 'int',
-          min: 1,
-          hint: '프로젝트 차례에서 몇 번째 편인지',
-        },
-        { name: 'tags', label: '태그', widget: 'list', required: false, default: [] },
-        attachments,
-        { name: 'body', label: '본문', widget: 'markdown' },
-      ],
-    },
   ],
 };
+
+// 연재 차례가 있는 프로젝트마다 글쓰기 메뉴가 하나씩 생긴다.
+// 순번은 숫자 입력이 아니라 차례에서 편을 고르는 선택지다.
+// 프로젝트에 series 를 더하면 여기 손대지 않아도 메뉴가 따라 생긴다
+const projects = await getCollection('projects');
+for (const pr of projects) {
+  const series = pr.data.series;
+  if (!series || series.length === 0) continue;
+  config.collections.push({
+    name: `chapters_${pr.id.replace(/[^a-z0-9]/gi, '_')}`,
+    label: `연재 · ${pr.data.title}`,
+    label_singular: '편',
+    folder: `src/content/projects/${pr.id}`,
+    create: true,
+    // 파일과 주소가 순번을 따른다. /projects/<프로젝트>/<순번>
+    slug: '{{fields.order}}',
+    extension: 'md',
+    format: 'yaml-frontmatter',
+    summary: '{{order}}. {{title}}',
+    sortable_fields: ['order', 'date'],
+    fields: [
+      {
+        name: 'order',
+        label: '어느 편인지',
+        widget: 'select',
+        options: series.map((c, i) => ({ label: `${String(i + 1).padStart(2, '0')}  ${c.title}`, value: i + 1 })),
+        hint: '차례에서 고르면 그 자리에 링크가 걸림',
+      },
+      {
+        name: 'title',
+        label: '제목',
+        widget: 'string',
+        hint: '차례의 제목과 달라도 됨. 여기 적는 것이 실제 글 제목',
+      },
+      { ...dateField, name: 'date', label: '날짜' },
+      { name: 'tags', label: '태그', widget: 'list', required: false, default: [] },
+      attachments,
+      { name: 'body', label: '본문', widget: 'markdown' },
+    ],
+  });
+}
 
 export const GET: APIRoute = () =>
   new Response(JSON.stringify(config, null, 2), {
