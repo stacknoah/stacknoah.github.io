@@ -81,6 +81,8 @@ const config: { backend: unknown; [k: string]: any; collections: any[] } = {
     base_url: 'https://stacknoah-auth.stacknoah.workers.dev',
   },
   local_backend: true,
+  // 로그인 화면에 Decap 로고 대신 우리 마크
+  logo_url: '/admin/logo.svg',
   locale: 'ko',
   media_folder: 'public/files',
   public_folder: '/files',

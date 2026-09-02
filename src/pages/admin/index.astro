@@ -19,10 +19,12 @@ export const prerender = true;
       /* 편집 화면을 사이트와 같은 결로. 기본값이 파랗고 둥글어서 겉돈다 */
       :root {
         --ink: #1a1a19;
-        --ink-3: #83837e;
+        --ink-3: #6b6b66;
         --line: #e7e7e3;
         --accent-ink: #007472;
+        --accent-mid: #22928f;
         --accent-soft: #dff4f2;
+        --bg: #fcfcfb;
         --pretendard: 'Pretendard Variable', Pretendard, -apple-system, sans-serif;
       }
       body,
@@ -47,6 +49,21 @@ export const prerender = true;
         color: var(--ink-3) !important;
         font-size: 0.75rem !important;
       }
+      /* 로그인 화면을 사이트의 종이색으로. 기본은 차가운 회청색 */
+      [class*='AuthenticationPage'] {
+        background: var(--bg) !important;
+      }
+      [class*='AuthenticationPage'] img[class*='CustomLogo'],
+      [class*='AuthenticationPage'] img {
+        width: 90px !important;
+        height: 90px !important;
+      }
+      [class*='AuthenticationPage'] button {
+        background: var(--accent-ink) !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+      }
+
       /* 본문 칸을 넉넉하게. 기본은 답답함 */
       [class*='RawEditor'] textarea,
       [class*='Slate'] [contenteditable='true'] {

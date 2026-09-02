@@ -75,7 +75,17 @@ const path = Astro.url.pathname;
 
     <footer class:list={['container', { narrow }]}>
       <div class="footer-inner mono">
-        <span>© stacknoah</span>
+        <span class="foot-left">
+          © stacknoah
+          {/* 인쇄물의 색 보정 띠처럼, 이 사이트가 쓰는 색 전부를 순서대로 */}
+          <span class="spectrum" aria-hidden="true">
+            {
+              ['--ink', '--ink-2', '--ink-3', '--line-strong', '--line', '--surface', '--accent-strong', '--accent-ink', '--accent-mid', '--accent-24', '--accent-14', '--accent-08'].map(
+                (v) => <i style={`background: var(${v})`} />
+              )
+            }
+          </span>
+        </span>
         <span class="footer-links">
           <a href="/admin/" class="muted">글쓰기</a>
           <a href="https://github.com/stacknoah" class="muted" target="_blank" rel="noopener">github</a>
@@ -177,6 +187,29 @@ const path = Astro.url.pathname;
     padding-top: 1.5rem;
     font-size: 0.75rem;
     color: var(--ink-3);
+  }
+
+  .foot-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .spectrum {
+    display: inline-flex;
+  }
+
+  .spectrum i {
+    width: 9px;
+    height: 6px;
+  }
+
+  .spectrum i:first-child {
+    border-radius: 2px 0 0 2px;
+  }
+
+  .spectrum i:last-child {
+    border-radius: 0 2px 2px 0;
   }
 
   .footer-links {
