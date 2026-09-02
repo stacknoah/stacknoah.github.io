@@ -16,12 +16,6 @@ const recent = [...articles]
   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
   .slice(0, 3);
 
-// 표제란. 도면 한 장의 이름, 분야, 갱신일, 수량
-const projects = await getCollection('projects');
-const built = new Date();
-const stamp = `${String(built.getFullYear()).slice(2)}.${String(built.getMonth() + 1).padStart(2, '0')}.${String(built.getDate()).padStart(2, '0')}`;
-const written = notes.length + articles.length + chapters.length;
-
 const entries: ActivityEntry[] = [
   ...notes.map((e) => ({
     date: ymd(e.data.date),
@@ -46,110 +40,130 @@ const entries: ActivityEntry[] = [
 ---
 
 <Base>
-  <section class="sheet tb rise" aria-label="표제란">
-    <div class="cell name">stacknoah</div>
-    <div class="cell grow">security consulting · it / ot</div>
-    <div class="cell">rev <b>{stamp}</b></div>
-    <div class="cell">
-      글 <b>{written}</b>
-      <span class="sep" aria-hidden="true">/</span>
-      프로젝트 <b>{projects.length}</b>
-    </div>
+  <section class="hero rise">
+    <h1 class="mono"><span class="hl">stacknoah</span><span class="cursor">_</span></h1>
+    <p class="ident mono">security consulting · it / ot</p>
   </section>
 
-  <section class="sheet grid rise rise-2">
-    <div class="mod act">
-      <p class="mod-head">
-        <span class="no">01</span>
-        activity
-        <span class="lead" aria-hidden="true"></span>
-        {written > 0 && <span class="val">{written}편</span>}
-      </p>
-      <div class="mod-body">
-        <Activity entries={entries} head={false} />
-      </div>
+  <section class="block split rise rise-2">
+    <div class="col activity">
+      <Activity entries={entries} />
     </div>
-
-    <div class="mod">
-      <p class="mod-head">
-        <span class="no">02</span>
+    <div class="col">
+      <p class="section-label">
         projects
         <span class="lead" aria-hidden="true"></span>
         <a href="/projects" class="all" aria-label="프로젝트 전부 보기">→</a>
       </p>
-      <div class="mod-body">
-        <Projects limit={1} />
-      </div>
-    </div>
+      <Projects limit={1} />
 
-    <div class="mod">
-      <p class="mod-head">
-        <span class="no">03</span>
+      <p class="section-label second">
         articles
         <span class="lead" aria-hidden="true"></span>
         <a href="/articles" class="all" aria-label="글 전부 보기">→</a>
       </p>
-      <div class="mod-body">
-        {
-          recent.length > 0 ? (
-            <ul class="arows">
-              {recent.map((a) => (
-                <li>
-                  <a class="arow" href={`/articles/${a.id}`}>
-                    <span class="d mono">{ymd(a.data.date).slice(5).replace('-', '.')}</span>
-                    <span class="t">{a.data.title}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div class="blank" role="img" aria-label="아직 쓴 글이 없음">
-              <span />
-              <span />
-              <span />
-            </div>
-          )
-        }
-      </div>
+      {
+        recent.length > 0 ? (
+          <ul class="arows">
+            {recent.map((a) => (
+              <li>
+                <a class="arow" href={`/articles/${a.id}`}>
+                  <span class="d mono">{ymd(a.data.date).slice(5).replace('-', '.')}</span>
+                  <span class="t">{a.data.title}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div class="blank" role="img" aria-label="아직 쓴 글이 없음">
+            <span />
+            <span />
+            <span />
+          </div>
+        )
+      }
     </div>
+  </section>
 
-    <div class="mod wide">
-      <p class="mod-head">
-        <span class="no">04</span>
-        notes
-        <span class="lead" aria-hidden="true"></span>
-        <a href="/notes" class="all" aria-label="노트 전부 보기">→</a>
-      </p>
-      <div class="mod-body">
-        <Roadmap />
-      </div>
-    </div>
+  <section class="block rise rise-3">
+    <p class="section-label">
+      notes
+      <span class="lead" aria-hidden="true"></span>
+      <a href="/notes" class="all" aria-label="노트 전부 보기">→</a>
+    </p>
+    <Roadmap />
   </section>
 </Base>
 
 <style>
-  .tb {
-    margin-top: 1.75rem;
+  .hero {
+    margin: 5rem 0 3.5rem;
   }
 
-  .sep {
-    color: var(--line-strong);
+  /* 이름이 선택된 글자처럼 옅은 터키석 밴드 위에 앉는다.
+     ::selection 과 같은 색이라, 화면 어디를 드래그해도 같은 문법이 나온다 */
+  .hl {
+    background: var(--accent-14);
+    border-radius: 6px;
+    padding: 0.02em 0.09em 0.07em;
+    margin-left: -0.09em;
   }
 
-  /* 밭이 왼쪽 두 줄을 차지하고, 오른쪽에 프로젝트와 글이 위아래로 앉는다.
-     칸이 서로 선을 나눠 쓰니 높이는 저절로 맞는다 */
-  .grid {
+  /* 이름 아래 한 줄. 설명하는 문장이 아니라 표기다.
+     찾아본 개인 사이트 거의 전부가 이름을 홀로 두지 않았다 */
+  .ident {
+    margin: 0.75rem 0 0;
+    font-size: var(--t-7);
+    font-weight: 500;
+    letter-spacing: var(--track-en);
+    color: var(--ink-3);
+  }
+
+  .hero h1 {
+    font-size: var(--t-1);
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: var(--track-1);
+    line-height: 1.1;
+  }
+
+  .cursor {
+    color: var(--accent-mid);
+    /* 무한에서 세 번으로. 쉬는 화면에서 혼자 움직이는 것이 없어야 한다 */
+    animation: blink 1.2s steps(1) 3;
+  }
+
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  /* 선은 긋지 않는다. 구역은 여백과 activity 의 바탕 판이 가른다.
+     페이지의 선 어휘는 점선(목차)과 푸터의 실선 둘뿐 */
+  .block {
+    margin-bottom: 0;
+  }
+
+  /* 왼쪽 히트맵, 오른쪽 프로젝트 */
+  .split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
+    gap: 4rem;
+    align-items: start;
+    margin-bottom: 4.5rem;
+  }
+
+  /* 오른쪽 칸의 둘째 구역. 프로젝트와 글 사이의 쉼.
+     칸 바닥이 왼쪽 밭과 맞도록 로드맵의 빈 줄보다 조금 촘촘하다 */
+  .second {
     margin-top: 1.25rem;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 320px);
-    grid-auto-rows: auto;
   }
 
-  .act {
-    grid-row: 1 / span 2;
-  }
-
-  .wide {
-    grid-column: 1 / -1;
+  /* 옆 밭과 바닥을 맞추려고 로드맵의 빈 줄보다 조금 촘촘하다 */
+  .col .blank {
+    padding-top: 0.375rem;
+    row-gap: 1.125rem;
   }
 
   /* 좁은 칸의 글 한 줄. 날짜와 제목만 */
@@ -169,7 +183,7 @@ const entries: ActivityEntry[] = [
     gap: 0.625rem;
     padding: 0.3rem var(--hang);
     margin: 0 calc(var(--hang) * -1);
-    border-radius: 4px;
+    border-radius: 6px;
     transition: background var(--out) ease;
   }
 
@@ -202,16 +216,32 @@ const entries: ActivityEntry[] = [
     transition-duration: var(--in);
   }
 
-  .mod-body .blank {
-    padding-top: 0.25rem;
+  /* 전부 보기로 가는 화살표 */
+  .all {
+    margin-left: auto;
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+    transition: color var(--out) ease, transform var(--out) var(--ease);
+  }
+
+  .all:hover {
+    color: var(--accent-ink);
+    transform: translateX(3px);
+    transition-duration: var(--in);
   }
 
   @media (max-width: 960px) {
-    .grid {
+    .split {
       grid-template-columns: minmax(0, 1fr);
+      gap: 3rem;
+      margin-bottom: 4rem;
     }
-    .act {
-      grid-row: auto;
+  }
+
+  /* Astro 가 컴포넌트 스타일을 스코프해서 global.css 보다 우선순위가 높다 */
+  @media (prefers-reduced-motion: reduce) {
+    .cursor {
+      animation: none;
     }
   }
 </style>

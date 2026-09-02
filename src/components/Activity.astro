@@ -19,11 +19,9 @@ interface Props {
   entries: ActivityEntry[];
   /** 몇 개월치를 보여줄지 */
   months?: number;
-  /** 라벨 줄을 그릴지. 모듈 머리띠가 대신하면 false */
-  head?: boolean;
 }
 
-const { entries, months = 6, head = true } = Astro.props;
+const { entries, months = 6 } = Astro.props;
 
 const DAY = 86400000;
 const MONTH = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -120,22 +118,20 @@ const anchor = (col: number) => (col >= cols - 6 ? ' end' : col <= 5 ? ' start' 
   data-last={lastKey ?? ''}
   style={`--cols:${cols}`}
 >
-  {
-    head && (
-      <p class="section-label">
-        activity
-        {total > 0 && (
-          <Fragment>
-            <span class="lead" aria-hidden="true" />
-            <span class="tally">
-              <b>{total}</b>
-              <i>편</i>
-            </span>
-          </Fragment>
-        )}
-      </p>
-    )
-  }
+  <p class="section-label">
+    activity
+    {
+      total > 0 && (
+        <Fragment>
+          <span class="lead" aria-hidden="true" />
+          <span class="tally">
+            <b>{total}</b>
+            <i>편</i>
+          </span>
+        </Fragment>
+      )
+    }
+  </p>
 
   <div class="field">
     {

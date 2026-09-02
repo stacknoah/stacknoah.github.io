@@ -23,50 +23,30 @@ for (const n of notes) {
 
   {notes.length > 0 && <CategoryFilter />}
 
-  <div class="sheet one rise rise-2">
-    {
-      [...byYear.entries()].map(([year, list]) => (
-        <section class="mod" data-filter-group>
-          <p class="mod-head">
-            <span class="no">{year}</span>
-            <span class="lead" aria-hidden="true" />
-            <span class="val">{list.length}</span>
-          </p>
-          <div class="mod-body">
-            {list.map((n) => (
-              <PostRow
-                href={`/notes/${n.id}`}
-                date={n.data.date}
-                title={n.data.title}
-                category={n.data.category}
-                tags={n.data.tags}
-              />
-            ))}
-          </div>
-        </section>
-      ))
-    }
-    {
-      notes.length === 0 && (
-        <section class="mod">
-          <p class="mod-head">notes<span class="lead" aria-hidden="true" /></p>
-          <div class="mod-body">
-            <div class="blank" role="img" aria-label="아직 쓴 노트가 없음">
-              <span />
-              <span />
-              <span />
-            </div>
-          </div>
-        </section>
-      )
-    }
-  </div>
+  {
+    [...byYear.entries()].map(([year, list]) => (
+      <section class="year rise rise-2" data-filter-group>
+        <p class="section-label">{year}</p>
+        {list.map((n) => (
+          <PostRow
+            href={`/notes/${n.id}`}
+            date={n.data.date}
+            title={n.data.title}
+            category={n.data.category}
+            tags={n.data.tags}
+          />
+        ))}
+      </section>
+    ))
+  }
+
+  {notes.length === 0 && <p class="empty">아직 쓴 노트가 없음</p>}
   <p class="empty" data-filter-empty hidden>이 분류에 해당하는 노트가 없음</p>
 </Base>
 
 <style>
-  .one {
-    grid-template-columns: minmax(0, 1fr);
+  .year {
+    margin-bottom: 2.75rem;
   }
 
   .empty {
