@@ -16,10 +16,10 @@ const {
 const pageTitle = title ? `${title} | stacknoah` : 'stacknoah';
 
 const nav = [
-  { href: '/notes', label: 'Notes' },
-  { href: '/projects', label: 'Projects' },
-  { href: '/articles', label: 'Articles' },
-  { href: '/about', label: 'About' },
+  { href: '/notes', label: 'notes' },
+  { href: '/projects', label: 'projects' },
+  { href: '/articles', label: 'articles' },
+  { href: '/about', label: 'about' },
 ];
 
 const path = Astro.url.pathname;
@@ -97,8 +97,14 @@ const path = Astro.url.pathname;
 </html>
 
 <style>
+  /* 헤더도 도면의 한 줄. 아래에 괘선 */
   header {
-    padding-top: 2.25rem;
+    padding-top: 1.5rem;
+  }
+
+  nav {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--rule);
   }
 
   nav {
@@ -132,7 +138,9 @@ const path = Astro.url.pathname;
   }
 
   .menu-item {
-    font-size: 0.875rem;
+    font-family: var(--font-mono);
+    font-size: var(--t-7);
+    letter-spacing: var(--track-en);
     color: var(--ink-3);
     position: relative;
     padding: 0.15rem 0;
@@ -170,7 +178,7 @@ const path = Astro.url.pathname;
 
   main {
     min-height: 60vh;
-    padding-bottom: 6rem;
+    padding-bottom: 4rem;
   }
 
   /* 좌우 패딩을 안 쓴다. 단축 표기가 .container 의 좌우 2rem 을 이겨서
@@ -233,6 +241,15 @@ const path = Astro.url.pathname;
   @media (max-width: 480px) {
     .wordmark {
       display: none;
+    }
+
+    /* 고정폭 메뉴는 산세리프보다 넓다. 좁은 화면에서는 한 단 줄인다 */
+    .menu {
+      gap: 0.875rem;
+    }
+
+    .menu-item {
+      font-size: var(--t-8);
     }
 
     .logo {

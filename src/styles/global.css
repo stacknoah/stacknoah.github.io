@@ -10,6 +10,8 @@
   --ink-3: #6b6b66;
   --line: #e7e7e3;
   --line-strong: #d6d6d1;
+  /* 도면의 괘선. 모듈과 표제란을 짜는 선 */
+  --rule: #cfcfca;
   --surface: #f4f4f1;
 
   /* 터키석은 색소 하나뿐이다. 나머지는 전부 이걸 옅게 섞은 것이고,
@@ -302,6 +304,119 @@ a {
   background: var(--accent-mid);
 }
 
+/* 도면 모듈 체계. 페이지는 가는 괘선으로 짠 한 장의 시트고, 구역은 그 시트의
+   칸이다. 바깥 시트가 위와 왼쪽 선을 긋고 칸마다 오른쪽과 아래 선을 그어서
+   이웃한 칸이 선 하나를 나눠 쓴다. 여백이 아니라 선이 구역을 가른다 */
+.sheet {
+  display: grid;
+  border-top: 1px solid var(--rule);
+  border-left: 1px solid var(--rule);
+}
+
+.mod {
+  min-width: 0;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 칸의 머리띠. 번호, 이름, 점선, 오른쪽 값 */
+.mod-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  /* 안쪽 여백이 --hang 보다 커야 판면 밖으로 거는 표식(상태 점, 화살표)이
+     칸의 괘선을 넘지 않는다 */
+  padding: 0.5rem 1.25rem;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: var(--t-8);
+  font-weight: 500;
+  letter-spacing: var(--track-en);
+  color: var(--ink-3);
+  line-height: 1.4;
+}
+
+.mod-head .no {
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.mod-head .lead {
+  margin-left: 0.125rem;
+}
+
+.mod-head .val {
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.mod-head .all {
+  color: var(--ink-3);
+  transition: color var(--out) ease, transform var(--out) var(--ease);
+}
+
+.mod-head .all:hover {
+  color: var(--accent-ink);
+  transform: translateX(var(--slide));
+  transition-duration: var(--in);
+}
+
+.mod-body {
+  padding: 1rem 1.25rem;
+  flex: 1;
+  min-width: 0;
+}
+
+/* 표제란. 도면 한 장의 이름과 메타가 들어가는 칸들 */
+.tb {
+  grid-template-columns: auto 1fr auto auto;
+}
+
+.tb .cell {
+  padding: 0.7rem 1.25rem;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: var(--t-8);
+  letter-spacing: var(--track-en);
+  color: var(--ink-3);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.tb .cell.name {
+  font-size: var(--t-4);
+  font-weight: 650;
+  letter-spacing: var(--track-3);
+  color: var(--ink);
+}
+
+.tb .cell.grow {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tb .cell b {
+  font-weight: 500;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 720px) {
+  .tb {
+    grid-template-columns: 1fr 1fr;
+  }
+  .tb .cell.name,
+  .tb .cell.grow {
+    grid-column: 1 / -1;
+  }
+}
+
 /* 라벨과 오른쪽 끝값을 잇는 점선. 구역 라벨 세 줄이 같은 구조를 갖는다.
    왼쪽에 이름, 가운데에 점선, 오른쪽에 값 하나.
    히트맵은 격자 열 간격에 맞춘 자기 간격으로 이 줄을 덮어쓴다 */
@@ -483,7 +598,7 @@ a {
 
 /* 목록 페이지 공통 헤더 */
 .page-head {
-  margin: 4.5rem 0 3rem;
+  margin: 2.5rem 0 1.5rem;
 }
 
 .page-head h1 {

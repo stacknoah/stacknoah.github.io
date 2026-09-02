@@ -17,7 +17,14 @@ const articles = (await getCollection('articles')).sort(
 
   {articles.length > 0 && <CategoryFilter />}
 
-  <div class="list rise rise-2">
+  <div class="sheet one rise rise-2">
+  <section class="mod">
+    <p class="mod-head">
+      articles
+      <span class="lead" aria-hidden="true" />
+      {articles.length > 0 && <span class="val">{articles.length}</span>}
+    </p>
+    <div class="mod-body list">
     {
       articles.map((a) => (
         <a href={`/articles/${a.id}`} class="item" data-category={a.data.category ?? ''}>
@@ -41,13 +48,26 @@ const articles = (await getCollection('articles')).sort(
         </a>
       ))
     }
+    {
+      articles.length === 0 && (
+        <div class="blank" role="img" aria-label="아직 쓴 글이 없음">
+          <span />
+          <span />
+          <span />
+        </div>
+      )
+    }
+    </div>
+  </section>
   </div>
-
-  {articles.length === 0 && <p class="empty">아직 쓴 글이 없음</p>}
   <p class="empty" data-filter-empty hidden>이 분류에 해당하는 글이 없음</p>
 </Base>
 
 <style>
+  .one {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .list {
     display: flex;
     flex-direction: column;

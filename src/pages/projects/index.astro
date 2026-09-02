@@ -24,7 +24,14 @@ const sorted = projects.sort((a, b) => {
 
   <DomainFilter />
 
-  <div class="list rise rise-2" data-filter-group>
+  <div class="sheet one rise rise-2">
+  <section class="mod">
+    <p class="mod-head">
+      projects
+      <span class="lead" aria-hidden="true" />
+      <span class="val">{sorted.length}</span>
+    </p>
+    <div class="mod-body list" data-filter-group>
     {
       sorted.map((p) => {
         return (
@@ -45,6 +52,8 @@ const sorted = projects.sort((a, b) => {
         );
       })
     }
+    </div>
+  </section>
   </div>
 
   <p class="empty" data-filter-empty hidden>이 분류에 해당하는 프로젝트가 없음</p>
@@ -57,16 +66,20 @@ const sorted = projects.sort((a, b) => {
     gap: 0.25rem;
   }
 
+  .one {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .item {
     display: block;
-    padding: 1.125rem 1.125rem;
-    margin: 0 -1.125rem;
-    border-radius: 12px;
+    padding: 0.875rem var(--hang);
+    margin: 0 calc(var(--hang) * -1);
+    border-radius: 4px;
     transition: background 0.15s ease;
   }
 
   .item:hover {
-    background: var(--surface);
+    background: var(--accent-08);
   }
 
   .empty {
