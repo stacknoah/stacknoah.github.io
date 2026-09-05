@@ -1,14 +1,16 @@
 /* stacknoah design tokens. 라이트 미니멀, 위계는 크기와 여백으로 */
 :root {
   /* 종이처럼 아주 살짝 따뜻한 바탕. 순백은 화면에서 날이 서 보임 */
-  --bg: #fcfcfb;
-  --ink: #1a1a19;
+  --bg: #fbfaf6;
+  --clay: #a28376;
+  --paper-warm: #f6f0e9;
+  --ink: #24292b;
   --ink-2: #52524e;
   /* #83837e 는 종이 위 3.71 이라 작은 글자 기준 4.5 에 못 미쳤다.
      날짜 요약 라벨 태그가 전부 이 색인데다, hover 면이 회색에서
      터키석 8퍼센트로 바뀌면 더 내려간다. 여기서 5.22 로 올린다 */
-  --ink-3: #6b6b66;
-  --line: #e7e7e3;
+  --ink-3: #636964;
+  --line: #d8d9d3;
   --line-strong: #d6d6d1;
   --surface: #f4f4f1;
 
@@ -93,6 +95,8 @@ html {
 body {
   margin: 0;
   background: var(--bg);
+  background-image: none;
+  background-repeat: no-repeat;
   color: var(--ink);
   font-family: var(--font-sans);
   line-height: 1.75;
@@ -507,6 +511,12 @@ a {
   border-radius: 1.5px;
   background: var(--accent-mid);
 }
+
+/* Shared labels use space, leaving the activity marks as the only repeated texture. */
+.section-label::before { display: none; }
+.section-label .lead { background: none; }
+.row .leader { background: none; }
+.row { padding-top: .8rem; padding-bottom: .8rem; }
 
 .page-head p {
   margin: 0;

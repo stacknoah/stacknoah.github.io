@@ -1,6 +1,7 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { CATEGORY_KEYS, DOMAIN_KEYS } from './lib/categories';
+import { webSource } from './lib/daily';
 
 // 첨부 파일. public/files/ 에 두고 여기서 가리킨다
 const attachments = z
@@ -87,4 +88,20 @@ const chapters = defineCollection({
   }),
 });
 
-export const collections = { notes, articles, projects, chapters };
+const optionalText = z.preprocess((value) => value === null || value === '' ? undefined : value, z.string().optional());
+const daily = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/daily' }),
+  schema: z.object({
+    title: z.string().trim().min(1).max(300).regex(/^[^\r\n]+$/, '한 문장으로 입력해주세요'),
+    date: z.coerce.date(),
+    post: optionalText,
+    sourceTitle: optionalText,
+    sourceUrl: optionalText,
+  }).superRefine((data, ctx) => {
+    if (data.sourceUrl && !webSource(data.sourceTitle ?? '', data.sourceUrl, 'https://stacknoah.com')) {
+      ctx.addIssue({ code: 'custom', path: ['sourceUrl'], message: 'http 또는 https 웹 주소를 입력해주세요' });
+    }
+  }),
+});
+
+export const collections = { notes, articles, projects, chapters, daily };

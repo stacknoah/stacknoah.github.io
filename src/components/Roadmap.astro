@@ -1,10 +1,24 @@
 ---
 import { roadmap } from '../data/roadmap';
 import { CATEGORIES } from '../lib/categories';
+import { getCollection } from 'astro:content';
+
+const notes = (await getCollection('notes')).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const populated = roadmap.map((group) => {
+  const categories = group.categories.map((column) => ({
+    ...column,
+    items: notes.filter((note) => note.data.category === group.category && note.data.topic === column.name)
+      .map((note) => ({ label: note.data.title, link: `/notes/${note.id}` })),
+  }));
+  const unfiled = notes.filter((note) => note.data.category === group.category &&
+    !group.categories.some((column) => column.name === note.data.topic));
+  if (unfiled.length) categories.push({ name: '기타', items: unfiled.map((note) => ({ label: note.data.title, link: `/notes/${note.id}` })) });
+  return { ...group, categories };
+});
 
 // 다섯 분류가 세로로 쌓이면 화면만 길어지고 찾기가 어렵다.
 // 한 번에 하나만 펴고 위에서 갈아끼운다. 자바스크립트가 없으면 전부 펴진 채로 보임
-const groups = roadmap.map((g) => ({
+const groups = populated.map((g) => ({
   key: g.category,
   label: CATEGORIES[g.category],
   categories: g.categories,
@@ -44,9 +58,9 @@ const groups = roadmap.map((g) => ({
         data-first={i === 0 ? '' : undefined}
       >
         <div class="rail" data-scroll="x" tabindex="0">
-          {g.categories.map((cat) => (
+          {g.categories.map((cat, index) => (
             <section class="cat">
-              <h3>{cat.name}</h3>
+              <div class="cat-head"><span class="index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span><h3>{cat.name}</h3><span class="count" aria-label={`${cat.items.length}개 노트`}>{cat.items.length}</span></div>
               <div class="items" data-scroll="y">
                 {cat.items.length > 0 ? (
                   <ul>
@@ -65,11 +79,7 @@ const groups = roadmap.map((g) => ({
                     ))}
                   </ul>
                 ) : (
-                  <div class="blank" role="img" aria-label="아직 쓴 글이 없음">
-                    <span />
-                    <span />
-                    <span />
-                  </div>
+                  <p class="empty-note"><span class="empty-stroke" aria-hidden="true"></span>등록된 노트가 없습니다</p>
                 )}
               </div>
             </section>
@@ -262,8 +272,9 @@ const groups = roadmap.map((g) => ({
   }
 
   .rail {
-    display: flex;
-    gap: 2.5rem;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.75rem 2.5rem;
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scroll-snap-type: x proximity;
@@ -279,10 +290,18 @@ const groups = roadmap.map((g) => ({
   }
 
   .cat {
-    flex: 0 0 17rem;
     min-width: 0;
     scroll-snap-align: start;
   }
+
+  .cat-head { display: flex; align-items: baseline; gap: .75rem; padding: .75rem 0; border-top: 1px solid var(--line); }
+  .index { font: .625rem var(--font-mono); color: var(--accent-ink); }
+  .cat-head h3 { margin: 0; color: var(--ink-2); font-size: .8125rem; }
+  .count { margin-left: auto; font: .625rem var(--font-mono); color: var(--ink-3); }
+  .empty-note { display: flex; gap: .7rem; align-items: center; color: var(--ink-3); font-size: .6875rem; margin: .6rem 0 1rem 1.5rem; }
+  .empty-stroke { width: 18px; height: 1px; background: var(--accent-24); }
+  @media (max-width: 720px) { .rail { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; } }
+  @media (max-width: 420px) { .rail { grid-template-columns: 1fr; } }
 
   /* 무리를 묶는 말은 전부 라벨 층. activity 라벨이 히트맵을 이름 붙이는 것과 같은 관계 */
   h3 {

@@ -43,7 +43,7 @@ const articles = (await getCollection('articles')).sort(
     }
   </div>
 
-  {articles.length === 0 && <p class="empty">아직 쓴 글이 없음</p>}
+  {articles.length === 0 && <p class="empty">발행된 글이 없습니다</p>}
   <p class="empty" data-filter-empty hidden>이 분류에 해당하는 글이 없음</p>
 </Base>
 

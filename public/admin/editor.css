@@ -1,0 +1,52 @@
+/* The pinned Decap version provides these named Emotion components. */
+html, body { margin: 0; background: #fcfcfb; }
+body { padding-top: 52px; }
+.studio-bar { position: fixed; inset: 0 0 auto; height: 52px; z-index: 1000; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0 28px; background: #fcfcfb; border-bottom: 1px solid #e7e7e3; font-size: 12px; color: #52524e; }
+.studio-bar > span { font-family: ui-monospace, monospace; font-size: 11px; }
+.studio-bar i { font-style: normal; padding: 0 8px; color: #93bcb3; }
+.studio-bar a { text-decoration: none; }
+.studio-bar > div { display: flex; align-items: center; gap: 20px; }
+.studio-bar button { background: transparent; color: #52524e; border: 1px solid #d6d6d1; border-radius: 4px; padding: 6px 10px; cursor: pointer; font-size: 12px; }
+.studio-bar button[aria-pressed="true"] { color: #007472; border-color: #22928f; }
+#editor-loading { margin: 7rem auto; text-align: center; font-size: 14px; color: #6b6b66; }
+body [class$="-AppHeader"] { top: 52px !important; box-shadow: none !important; background: #fcfcfb !important; }
+body [class*="-EditorContainer "] { top: 52px !important; height: calc(100vh - 52px) !important; }
+body [class*="EditorContainer"], body [class*="EditorControlPane"], body [class*="ControlPaneContainer"] { background: #fcfcfb !important; }
+body [class*="EditorToolbar"] { top: 52px !important; box-shadow: none !important; border-bottom: 1px solid #e7e7e3; background: #fcfcfb !important; }
+body .writing-pane { width: 100%; box-sizing: border-box; max-width: 760px !important; padding: 2.5rem 28px 6rem !important; margin: auto; }
+.is-writing [class$="-AppHeader"] { display: none !important; }
+body [class*="-AppHeaderContent "], body [class*="-AppMainContainer "], body [class*="-EditorContainer "], body [class*="-ToolbarContainer "] { min-width: 0 !important; }
+.writing-pane > [data-writing-field] { margin-top: 24px !important; }
+.writing-pane > [data-writing-field="title"] { margin-top: 0 !important; }
+.writing-pane > [data-writing-field="title"] > label, .writing-pane > [data-writing-field="body"] > label { position: absolute !important; width: 1px !important; height: 1px !important; clip-path: inset(50%); overflow: hidden; }
+.writing-pane [data-writing-field="title"] input { padding: 10px 0 !important; background: transparent !important; border: 0 !important; font-size: 30px !important; font-weight: 550; letter-spacing: -.04em; line-height: 1.4 !important; }
+.writing-pane [data-writing-field="title"] input::placeholder { color: #969b96; }
+.writing-pane [data-writing-field="body"] > div { border: 0 !important; border-radius: 0 !important; background: transparent !important; }
+.writing-pane .cms-editor-visual > div { border: 0 !important; box-shadow: none !important; background: transparent !important; }
+.writing-pane .cms-editor-visual [class*="-ToolbarContainer "] { background: #fcfcfb !important; border-bottom: 1px solid #e7e7e3 !important; border-radius: 0 !important; }
+.writing-pane .cms-editor-visual div:has(> [contenteditable="true"]) { background: transparent !important; border: 0 !important; box-shadow: none !important; }
+.writing-pane [class*="-EditorControlBar "] { background: #fcfcfb !important; border-bottom: 1px solid #e7e7e3 !important; border-radius: 0 !important; }
+body [class*="-ToolbarContainer "]:has([class*="-PublishButton "]) { background: #fcfcfb !important; box-shadow: none !important; border-bottom: 1px solid #e7e7e3; }
+body [class*="-ToolbarSectionMain-"] { justify-content: flex-end !important; }
+body [class*="-PublishButton "] { background: #007472 !important; color: white !important; border-radius: 4px !important; }
+.writing-pane [data-writing-field="body"] [contenteditable="true"] { min-height: 330px !important; padding: 20px 24px !important; font-size: 16px !important; line-height: 1.9 !important; }
+.writing-pane [data-writing-field="body"] textarea { min-height: 330px !important; line-height: 1.8 !important; font-size: 15px !important; }
+.writing-pane > [data-writing-field] > label { background: transparent !important; padding: 0 0 8px !important; color: #6b6b66 !important; font-size: 11px !important; letter-spacing: .02em; }
+.writing-pane > .secondary-field { display: none; }
+.settings-open .writing-pane > .secondary-field { display: block; }
+.writing-pane input:not([type="checkbox"]), .writing-pane textarea { border-color: #d6d6d1 !important; background-color: #fcfcfb !important; }
+.topic-picker { display: flex; align-items: center; gap: 14px; }
+.topic-picker select { min-width: 0; flex: 1; padding: 12px; font-size: 14px; color: #1a1a19; background: #fcfcfb; border: 1px solid #d6d6d1; border-radius: 4px; }
+.topic-picker > span { color: #93bcb3; }
+.topic-picker select:focus-visible, .studio-bar button:focus-visible { outline: 2px solid #22928f; outline-offset: 2px; }
+body[data-demo="true"] .studio-bar > span::after { content: ' / 저장 테스트'; color: #007472; }
+@media (max-width: 600px) {
+  .studio-bar { padding: 0 16px; }
+  .studio-bar > span { display: none; }
+  body .writing-pane { padding: 1.5rem 16px 4rem !important; }
+  .writing-pane [data-writing-field="title"] input { font-size: 24px !important; }
+  .writing-pane [data-writing-field="body"] [contenteditable="true"] { padding: 12px !important; }
+  .writing-pane .cms-editor-visual [class*="-ToolbarContainer "] { flex-wrap: wrap; height: auto !important; gap: 8px; padding: 8px 0; }
+  body [class*="-ToolbarSectionMain-"] { min-width: 0; }
+  body [class*="-BackCollection "] { max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}

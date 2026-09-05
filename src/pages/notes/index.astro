@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import PostRow from '../../components/PostRow.astro';
 import CategoryFilter from '../../components/CategoryFilter.astro';
+import Roadmap from '../../components/Roadmap.astro';
 
 const notes = (await getCollection('notes')).sort(
   (a, b) => b.data.date.getTime() - a.data.date.getTime()
@@ -20,6 +21,8 @@ for (const n of notes) {
   <header class="page-head rise">
     <h1>Notes</h1>
   </header>
+
+  <section class="note-columns" aria-label="분류별 노트"><Roadmap /></section>
 
   {notes.length > 0 && <CategoryFilter />}
 
@@ -40,11 +43,12 @@ for (const n of notes) {
     ))
   }
 
-  {notes.length === 0 && <p class="empty">아직 쓴 노트가 없음</p>}
+  {notes.length === 0 && <p class="empty">등록된 노트가 없습니다</p>}
   <p class="empty" data-filter-empty hidden>이 분류에 해당하는 노트가 없음</p>
 </Base>
 
 <style>
+  .note-columns { margin-bottom: 3rem; }
   .year {
     margin-bottom: 2.75rem;
   }

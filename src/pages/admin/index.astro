@@ -1,151 +1,82 @@
 ---
-// 관리자 화면. public 에 두면 개발 서버가 /admin/ 을 안 열어줘서 정식 페이지로 둔다.
-// 설정은 /admin/config.yml 이 만들어 내보낸다
-export const prerender = true;
+import { getCollection } from 'astro:content';
+import '../../styles/global.css';
+const projects = await getCollection('projects');
+const chapters = await getCollection('chapters');
+const series = projects.filter((p) => p.data.series?.length);
+const recent = [
+  ...(await getCollection('daily')).map((p) => ({ ...p, collection: 'daily', type: 'Daily' })),
+  ...(await getCollection('notes')).map((p) => ({ ...p, collection: 'notes', type: 'Note' })),
+  ...(await getCollection('articles')).map((p) => ({ ...p, collection: 'articles', type: 'Article' })),
+].sort((a,b) => b.data.date.getTime() - a.data.date.getTime()).slice(0, 6);
+const editor = (collection: string, slug?: string) => `/admin/editor/#/collections/${collection}/${slug ? `entries/${encodeURIComponent(slug)}` : 'new'}`;
 ---
-
 <html lang="ko">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex" />
-    <title>stacknoah 글쓰기</title>
-    <link href="/admin/config.yml" type="text/yaml" rel="cms-config-url" />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
-    />
-    <style is:inline>
-      /* 편집 화면을 사이트와 같은 결로. 기본값이 파랗고 둥글어서 겉돈다 */
-      :root {
-        --ink: #1a1a19;
-        --ink-3: #6b6b66;
-        --line: #e7e7e3;
-        --accent-ink: #007472;
-        --accent-mid: #22928f;
-        --accent-soft: #dff4f2;
-        --bg: #fcfcfb;
-        --pretendard: 'Pretendard Variable', Pretendard, -apple-system, sans-serif;
-      }
-      body,
-      input,
-      textarea,
-      select,
-      button {
-        font-family: var(--pretendard) !important;
-      }
-      /* 파란 기본색을 터키석으로 */
-      [class*='Toolbar'] button[class*='active'],
-      [class*='ToggleBackground'] {
-        background-color: var(--accent-ink) !important;
-      }
-      a,
-      [class*='NavLink'][class*='active'] {
-        color: var(--accent-ink) !important;
-      }
-      /* 도움말을 눈에 덜 띄게 */
-      [class*='FieldHint'],
-      p[class*='hint'] {
-        color: var(--ink-3) !important;
-        font-size: 0.75rem !important;
-      }
-      /* 로그인 화면을 사이트의 종이색으로. 기본은 차가운 회청색 */
-      [class*='AuthenticationPage'] {
-        background: var(--bg) !important;
-      }
-      [class*='AuthenticationPage'] img[class*='CustomLogo'],
-      [class*='AuthenticationPage'] img {
-        width: 90px !important;
-        height: 90px !important;
-      }
-      [class*='AuthenticationPage'] button {
-        background: var(--accent-ink) !important;
-        border-radius: 8px !important;
-        font-weight: 600 !important;
-      }
-
-      /* 본문 칸을 넉넉하게. 기본은 답답함 */
-      [class*='RawEditor'] textarea,
-      [class*='Slate'] [contenteditable='true'] {
-        font-size: 0.9375rem !important;
-        line-height: 1.7 !important;
-        min-height: 24rem !important;
-      }
-    </style>
-  </head>
+  <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="robots" content="noindex"/><title>작업실 | stacknoah</title><link rel="icon" href="/favicon.svg"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"/></head>
   <body>
-    <script is:inline src="https://unpkg.com/decap-cms@3.3.3/dist/decap-cms.js"></script>
-    <script is:inline>
-      // 미리보기를 실제 글 페이지와 같은 모양으로 그린다.
-      // 기본 미리보기는 항목을 그대로 나열해서 발행된 모습과 딴판이다
-      (function () {
-        if (!window.CMS) return;
-        CMS.registerPreviewStyle('/admin/preview.css');
-
-        var CAT = { cs: 'CS', security: 'Security', consulting: 'Consulting', it: 'IT', ot: 'OT' };
-
-        function el(tag, cls, children) {
-          return window.h(tag, { className: cls }, children);
-        }
-
-        function post(props) {
-          var d = props.entry.get('data');
-          var h = window.h;
-          var meta = [];
-          var date = d.get('date');
-          if (date) meta.push(h('span', { key: 'd' }, String(date).slice(0, 10)));
-          if (d.get('category')) {
-            meta.push(h('span', { key: 'c', className: 'chip' }, CAT[d.get('category')] || d.get('category')));
-          }
-          if (d.get('topic')) meta.push(h('span', { key: 't', className: 'topic' }, d.get('topic')));
-          var tags = d.get('tags');
-          if (tags) {
-            tags.forEach(function (t, i) {
-              meta.push(h('span', { key: 'g' + i, className: 'tag' }, t));
-            });
-          }
-
-          return h('div', { className: 'wrap' }, [
-            h('div', { key: 'head', className: 'head' }, [
-              h('h1', { key: 'h' }, d.get('title') || h('span', { className: 'empty' }, '제목 없음')),
-              h('div', { key: 'm', className: 'meta' }, meta),
-              d.get('description')
-                ? h('p', { key: 'p', className: 'desc' }, d.get('description'))
-                : null,
-            ]),
-            h('div', { key: 'body', className: 'body' }, props.widgetFor('body')),
-          ]);
-        }
-
-        function project(props) {
-          var d = props.entry.get('data');
-          var h = window.h;
-          var STATUS = { ongoing: '진행 중', done: '완료', paused: '중단' };
-          var meta = [h('span', { key: 's' }, STATUS[d.get('status')] || '')];
-          if (d.get('domain')) {
-            meta.push(h('span', { key: 'dm', className: 'chip' }, d.get('domain').toUpperCase()));
-          }
-          var start = d.get('start');
-          var end = d.get('end');
-          if (start) {
-            meta.push(
-              h('span', { key: 'p' }, String(start).slice(0, 10) + ' ~ ' + (end ? String(end).slice(0, 10) : ''))
-            );
-          }
-          return h('div', { className: 'wrap' }, [
-            h('div', { key: 'head', className: 'head' }, [
-              h('h1', { key: 'h' }, d.get('title') || h('span', { className: 'empty' }, '이름 없음')),
-              h('div', { key: 'm', className: 'meta' }, meta),
-              d.get('summary') ? h('p', { key: 'p', className: 'desc' }, d.get('summary')) : null,
-            ]),
-            h('div', { key: 'body', className: 'body' }, props.widgetFor('body')),
-          ]);
-        }
-
-        CMS.registerPreviewTemplate('notes', post);
-        CMS.registerPreviewTemplate('articles', post);
-        CMS.registerPreviewTemplate('projects', project);
-      })();
+    <div class="studio">
+      <header><a href="/" class="brand">stacknoah<span>_</span></a><a href="/">블로그로 돌아가기 ↗</a></header>
+      <main>
+        <section class="welcome"><div><p class="eyebrow">STUDIO</p><h1>오늘의 기록</h1></div></section>
+        <section class="new-writing" aria-label="새 글 작성">
+          <a class="compose daily" href={editor('daily')}><span class="type">DAILY</span><h2>한 줄 남기기 <span>↗</span></h2><p>홈에 쌓이는 오늘의 핵심</p></a>
+          <a class="compose primary" href={editor('notes')}><span class="type">NOTE <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 4h18v24H7zM12 11h8M12 16h8M12 21h5"/></svg></span><h2>노트 쓰기 <span>↗</span></h2><p>공부한 개념과 짧은 기록</p></a>
+          <a class="compose" href={editor('articles')}><span class="type">ARTICLE <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M9 4h18v22H9zM5 8v22h18M14 11h8M14 16h8M14 21h5"/></svg></span><h2>글 쓰기 <span>↗</span></h2><p>하나의 주제를 정리한 긴 글</p></a>
+        </section>
+        {series.length > 0 && <section class="series"><div class="section-heading"><h2>프로젝트 연재</h2><a href="/admin/editor/#/collections/projects">프로젝트 관리 →</a></div>{series.map((project) => {
+          const collection = `chapters_${project.id.replace(/[^a-z0-9]/gi, '_')}`;
+          return <details><summary><span>{project.data.title}</span><span class="series-size">{project.data.series!.length}편 <i>+</i></span></summary><ol>{project.data.series!.map((chapter,index) => {
+            const existing = chapters.find((c) => c.id.startsWith(`${project.id}/`) && c.data.order === index + 1);
+            const href = existing ? editor(collection, existing.id.split('/').slice(1).join('/')) : `/admin/editor/?chapter=${index + 1}#/collections/${collection}/new`;
+            return <li><a href={href}><span class="ordinal">{String(index+1).padStart(2,'0')}</span><span>{chapter.title}</span><small>{existing ? '수정' : '쓰기'} ↗</small></a></li>;
+          })}</ol></details>;
+        })}</section>}
+        <section class="existing"><div class="section-heading"><h2>이어서 쓰기</h2><a href="/admin/editor/#/collections/daily">한 줄 기록 관리 →</a></div>{recent.length ? <ul>{recent.map((entry) => <li><a href={editor(entry.collection, entry.id)}><small>{entry.type}</small><span>{entry.data.title}</span><span>↗</span></a></li>)}</ul> : <p class="empty">발행된 기록이 없습니다</p>}</section>
+        <footer><span>stacknoah / studio</span><a href={editor('projects')}>새 프로젝트 +</a></footer>
+      </main>
+    </div>
+    <script>
+      if (location.hash.startsWith('#/')) location.replace('/admin/editor/' + location.hash);
     </script>
   </body>
 </html>
+<style>
+  .studio { max-width: 900px; padding: 0 2rem; margin: auto; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 2rem 0; }
+  header a { font-size: .75rem; color: var(--ink-3); }
+  .brand { font: 600 .9375rem var(--font-mono); color: var(--ink); }
+  .brand span { color: var(--accent-mid); }
+  .welcome { display: flex; align-items: center; justify-content: space-between; margin: 2rem 0 2.5rem; }
+  .eyebrow,.type { font: .625rem var(--font-mono); letter-spacing: .12em; color: var(--accent-ink); }
+  h1 { font-size: clamp(1.8rem,4vw,2.4rem); line-height: 1.45; font-weight: 550; letter-spacing: -.055em; margin: .8rem 0; }
+  .intro { font-size: .8125rem; color: var(--ink-3); }
+  .new-writing { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; }
+  .compose { padding: 1.5rem 1.75rem; border: 1px solid var(--line); border-radius: 4px; background: linear-gradient(135deg, #fffdfa, var(--paper-warm)); box-shadow: 0 2px 3px #59473803, 0 12px 30px #59473804; transition: border-color .2s, transform .2s; }
+  .compose,.compose.primary { background: none; box-shadow: none; border-color: var(--line); }
+  .compose.daily { border-top: 2px solid var(--accent-mid); }
+  .compose:hover { border-color: var(--accent-mid); transform: translateY(-3px); }
+  .type { display: flex; align-items: center; justify-content: space-between; min-height: 30px; }
+  .type svg { width: 30px; height: 30px; fill: none; stroke: var(--accent-mid); stroke-width: 1; }
+  .compose h2 { font-size: 1.125rem; font-weight: 550; margin: 1.25rem 0 .25rem; }
+  .compose h2 span { float: right; font-weight: 400; color: var(--accent-ink); }
+  .compose p { margin: 0; font-size: .75rem; color: var(--ink-3); }
+  .series,.existing { margin-top: 2.75rem; }
+  .section-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: .8rem; }
+  .section-heading h2 { font-size: .875rem; font-weight: 550; margin: 0; }
+  .section-heading a { font-size: .6875rem; color: var(--ink-3); }
+  details { border-top: 1px solid var(--line); }
+  summary { cursor: pointer; list-style: none; padding: 1rem 0; display: flex; justify-content: space-between; font-size: .9375rem; }
+  summary::-webkit-details-marker { display: none; }
+  .series-size { color: var(--ink-3); font-size: .75rem; }
+  .series-size i { display: inline-block; font-style: normal; margin-left: 1rem; }
+  details[open] .series-size i { transform: rotate(45deg); }
+  ol,ul { list-style: none; padding: 0; margin: 0; }
+  li a { display: flex; align-items: baseline; gap: 1rem; font-size: .8125rem; padding: .7rem .5rem; }
+  li a:hover { background: var(--accent-08); }
+  li small, .ordinal { font: .625rem var(--font-mono); color: var(--ink-3); }
+  li a > :last-child { margin-left: auto; flex-shrink: 0; }
+  .empty { color: var(--ink-3); font-size: .8125rem; padding: .75rem 0; }
+  footer { display: flex; justify-content: space-between; margin: 3rem 0; font: .625rem var(--font-mono); color: var(--ink-3); }
+  @media (max-width: 560px) { .studio { padding: 0 1.25rem; } .new-writing { grid-template-columns: 1fr; } .welcome :global(.folio) { width: 115px; } .compose { padding: 1.25rem; } }
+  @media (prefers-reduced-motion: reduce) { .compose { transition: none; } .compose:hover { transform: none; } }
+</style>

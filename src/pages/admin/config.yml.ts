@@ -38,27 +38,29 @@ const dateField = {
   date_format: 'YYYY-MM-DD',
   time_format: false,
   picker_utc: true,
+  default: '{{now}}',
 };
 
 // 노트와 글이 같은 항목을 쓴다
 const writingFields = [
   { name: 'title', label: '제목', widget: 'string' },
+  { name: 'body', label: '본문', widget: 'markdown', modes: ['rich_text', 'raw'] },
   dateField,
   {
     name: 'category',
     label: '대분류',
-    widget: 'select',
+    widget: 'hidden',
     required: false,
     options: categoryOptions,
     hint: '로드맵 탭과 같은 다섯 갈래',
   },
   {
     name: 'topic',
-    label: '컬럼',
-    widget: 'select',
+    label: '분류와 컬럼',
+    widget: 'topic',
     required: false,
     options: topicOptions,
-    hint: '로드맵에서 어느 칸에 들어가는지',
+    hint: '발행하면 홈의 해당 컬럼에 자동으로 표시돼',
   },
   { name: 'tags', label: '태그', widget: 'list', required: false, default: [] },
   {
@@ -69,8 +71,14 @@ const writingFields = [
     hint: '목록에서 제목 아래 보임',
   },
   attachments,
-  { name: 'body', label: '본문', widget: 'markdown' },
 ];
+
+const postOptions = [];
+for (const collection of ['notes', 'articles', 'projects', 'chapters'] as const) {
+  for (const entry of await getCollection(collection)) {
+    postOptions.push({ label: entry.data.title, value: `/${collection === 'chapters' ? 'projects' : collection}/${entry.id}` });
+  }
+}
 
 // 컬렉션을 뒤에서 더 밀어 넣으므로 느슨한 타입으로 둔다
 const config: { backend: unknown; [k: string]: any; collections: any[] } = {
@@ -84,9 +92,29 @@ const config: { backend: unknown; [k: string]: any; collections: any[] } = {
   // 로그인 화면에 Decap 로고 대신 우리 마크
   logo_url: '/admin/logo.svg',
   locale: 'ko',
+  editor: { preview: false },
   media_folder: 'public/files',
   public_folder: '/files',
   collections: [
+    {
+      name: 'daily',
+      label: '한 줄 기록',
+      label_singular: '한 줄 기록',
+      folder: 'src/content/daily',
+      create: true,
+      slug: '{{year}}-{{month}}-{{day}}-{{slug}}',
+      extension: 'md',
+      format: 'yaml-frontmatter',
+      summary: '{{date}} / {{title}}',
+      sortable_fields: ['date', 'title'],
+      fields: [
+        { name: 'title', label: '오늘 배운 한 줄', widget: 'string', pattern: ['^.{1,300}$', '1~300자로 입력해주세요'] },
+        dateField,
+        { name: 'post', label: '내 블로그 원문', widget: 'select', required: false, options: postOptions, hint: '노트, 글 또는 프로젝트에서 선택' },
+        { name: 'sourceUrl', label: '외부 출처 주소', widget: 'string', required: false, pattern: ['^https?://[^\\s]+$', 'http 또는 https로 시작하는 웹 주소'] },
+        { name: 'sourceTitle', label: '외부 출처 제목', widget: 'string', required: false, hint: '비워두면 사이트 주소로 표시' },
+      ],
+    },
     {
       name: 'notes',
       label: '노트',
@@ -131,6 +159,7 @@ const config: { backend: unknown; [k: string]: any; collections: any[] } = {
       view_groups: [{ label: '상태', field: 'status' }],
       fields: [
         { name: 'title', label: '이름', widget: 'string' },
+        { name: 'body', label: '개요', widget: 'markdown' },
         {
           name: 'status',
           label: '상태',
@@ -179,7 +208,6 @@ const config: { backend: unknown; [k: string]: any; collections: any[] } = {
           ],
         },
         attachments,
-        { name: 'body', label: '개요', widget: 'markdown' },
       ],
     },
 
@@ -224,6 +252,16 @@ for (const pr of projects) {
       attachments,
       { name: 'body', label: '본문', widget: 'markdown' },
     ],
+  });
+}
+
+// All writing screens start with the title and the actual editor.
+for (const collection of config.collections) {
+  if (collection.name === 'daily') continue;
+  const priority = ['title', 'body', 'topic', 'order', 'summary', 'domain', 'status'];
+  collection.fields.sort((a: { name: string }, b: { name: string }) => {
+    const rank = (name: string) => priority.includes(name) ? priority.indexOf(name) : priority.length;
+    return rank(a.name) - rank(b.name);
   });
 }
 
